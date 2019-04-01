@@ -488,6 +488,22 @@ export default class Endpoint extends EventEmitter {
         });
     }
 
+    /**
+     * Start a conference bridge with all the active calls.
+     * @returns {Promise}
+     */
+    conferenceCall() {
+        return new Promise((resolve, reject) => {
+            NativeModules.PjSipModule.conferenceCall( (successful, data) => {
+                if (successful) {
+                    resolve(data);
+                } else {
+                    reject(data);
+                }
+            });
+        });
+    }
+
     activateAudioSession() {
         return new Promise((resolve, reject) => {
             NativeModules.PjSipModule.activateAudioSession((successful, data) => {
