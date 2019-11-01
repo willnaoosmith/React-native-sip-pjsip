@@ -41,6 +41,7 @@ public class PjSipBroadcastReceiver extends BroadcastReceiver {
     public IntentFilter getFilter() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(PjActions.EVENT_STARTED);
+        filter.addAction(PjActions.EVENT_SERVICE_STOPPED);
         filter.addAction(PjActions.EVENT_ACCOUNT_CREATED);
         filter.addAction(PjActions.EVENT_REGISTRATION_CHANGED);
         filter.addAction(PjActions.EVENT_CALL_RECEIVED);
@@ -49,7 +50,7 @@ public class PjSipBroadcastReceiver extends BroadcastReceiver {
         filter.addAction(PjActions.EVENT_CALL_SCREEN_LOCKED);
         filter.addAction(PjActions.EVENT_MESSAGE_RECEIVED);
         filter.addAction(PjActions.EVENT_HANDLED);
-
+        filter.addAction("android.intent.action.MEDIA_BUTTON");
         return filter;
     }
 
@@ -62,6 +63,9 @@ public class PjSipBroadcastReceiver extends BroadcastReceiver {
         switch (action) {
             case PjActions.EVENT_STARTED:
                 onCallback(intent);
+                break;
+            case PjActions.EVENT_SERVICE_STOPPED:
+                onServiceStopped(intent);
                 break;
             case PjActions.EVENT_ACCOUNT_CREATED:
                 onCallback(intent);
@@ -116,6 +120,11 @@ public class PjSipBroadcastReceiver extends BroadcastReceiver {
         String json = intent.getStringExtra("data");
         Object params = ArgumentUtils.fromJson(json);
         emit("pjSipCallTerminated", params);
+    }
+    
+    private void onServiceStopped(Intent intent) {
+
+        emit("pjSipCallServiceStopped", null);
     }
 
     private void onCallback(Intent intent) {

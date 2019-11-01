@@ -45,6 +45,20 @@ public class PjSipBroadcastEmiter {
             Log.e(TAG, "Failed to send ACCOUNT_CREATED event", e);
         }
     }
+    
+    public void fireServiceStopped(Intent original) {
+
+        try {
+            Intent intent = new Intent();
+            intent.setAction(PjActions.EVENT_SERVICE_STOPPED);
+            intent.putExtra("callback_id", original.getIntExtra("callback_id", -1));
+            context.sendBroadcast(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to send SERVICE_STOPPED event", e);
+        }
+
+
+    }
 
     public void fireIntentHandled(Intent original, JSONObject result) {
         Intent intent = new Intent();

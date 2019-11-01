@@ -2,9 +2,11 @@ package com.carusto.ReactNativePjSip;
 
 import android.app.Activity;
 import android.content.Intent;
-
+import android.app.Notification;
+import android.content.Context;
 import com.facebook.react.bridge.*;
-
+import android.os.Build;
+import android.util.Log;
 public class PjSipModule extends ReactContextBaseJavaModule {
 
     private static PjSipBroadcastReceiver receiver;
@@ -29,8 +31,9 @@ public class PjSipModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void start(ReadableMap configuration, Callback callback) {
         int id = receiver.register(callback);
-        Intent intent = PjActions.createStartIntent(id, configuration, getReactApplicationContext());
-
+        ReactApplicationContext context = getReactApplicationContext();
+        Intent intent = PjActions.createStartIntent(id, configuration, context);
+        Log.d("UNISERVICE", "Before Starting Service");
         getReactApplicationContext().startService(intent);
     }
 
@@ -38,7 +41,6 @@ public class PjSipModule extends ReactContextBaseJavaModule {
     public void changeServiceConfiguration(ReadableMap configuration, Callback callback) {
         int id = receiver.register(callback);
         Intent intent = PjActions.createSetServiceConfigurationIntent(id, configuration, getReactApplicationContext());
-        getReactApplicationContext().startService(intent);
     }
 
     @ReactMethod
@@ -46,6 +48,11 @@ public class PjSipModule extends ReactContextBaseJavaModule {
         int id = receiver.register(callback);
         Intent intent = PjActions.createAccountCreateIntent(id, configuration, getReactApplicationContext());
         getReactApplicationContext().startService(intent);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+            return;
+        }
+        context.startService(intent);
     }
 
     @ReactMethod

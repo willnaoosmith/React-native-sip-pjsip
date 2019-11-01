@@ -20,7 +20,8 @@ import java.util.Arrays;
 public class PjActions {
 
     public static final String TAG = "PjActions";
-
+    public static final String EVENT_SERVICE_STOPPED = "com.carusto.service.stopped";
+    public static final String ACTION_STOP_SERVICE = "service_stop";
     public static final String ACTION_START = "start";
     public static final String ACTION_CREATE_ACCOUNT = "account_create";
     public static final String ACTION_CHANGE_CODEC_SETTINGS= "change_codec_settings'";
@@ -120,6 +121,12 @@ public class PjActions {
         return intent;
     }
 
+    public static Intent createStopServiceIntent(Context context) {
+        Intent intent = new Intent(context, PjSipService.class);
+        intent.setAction(PjActions.ACTION_STOP_SERVICE);
+        return intent;
+    }
+    
     public static Intent createHangupCallIntent(int callbackId, int callId, Context context) {
         Intent intent = new Intent(context, PjSipService.class);
         intent.setAction(PjActions.ACTION_HANGUP_CALL);

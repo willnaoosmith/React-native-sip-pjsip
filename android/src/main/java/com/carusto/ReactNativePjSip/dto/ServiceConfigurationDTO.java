@@ -1,11 +1,13 @@
 package com.carusto.ReactNativePjSip.dto;
 
 import android.content.Intent;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
 import org.json.JSONObject;
 import org.pjsip.pjsua2.StringVector;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 
@@ -13,6 +15,7 @@ public class ServiceConfigurationDTO {
 
     public String ua;
     public ArrayList<String> stun;
+    private HashMap<String, Object> notificationsConfig;
 
     public String getUserAgent() {
         return ua;
@@ -24,6 +27,14 @@ public class ServiceConfigurationDTO {
             serversVector.add(server);
         }
         return serversVector;
+    }
+
+    public HashMap<String, Object> getNotificationsConfig() {
+        return notificationsConfig;
+    }
+
+    public void setNotificationsConfig(HashMap<String, Object> notificationsConfig) {
+        this.notificationsConfig = notificationsConfig;
     }
 
     public boolean isUserAgentNotEmpty() {
@@ -39,6 +50,7 @@ public class ServiceConfigurationDTO {
 
         try {
             json.put("ua", ua);
+            json.put("notifications", notificationsConfig);
 
             return json;
         } catch (Exception e) {
@@ -48,9 +60,15 @@ public class ServiceConfigurationDTO {
 
     public static ServiceConfigurationDTO fromIntent(Intent intent) {
         ServiceConfigurationDTO c = new ServiceConfigurationDTO();
-
+        Log.d("SERVICE_MAP","fromIntent");
         if (intent.hasExtra("ua")) {
             c.ua = intent.getStringExtra("ua");
+        }
+
+        if(intent.hasExtra("notifications")) {
+
+            c.setNotificationsConfig( new HashMap<>((Map<String, Object>)intent.getSerializableExtra("notifications")) );
+            Log.d("SERVICE_MAP", c.getNotificationsConfig().toString());
         }
 
         return c;
@@ -58,13 +76,19 @@ public class ServiceConfigurationDTO {
 
     public static ServiceConfigurationDTO fromMap(Map conf) {
         ServiceConfigurationDTO c = new ServiceConfigurationDTO();
-
+        Log.d("SERVICE_MAP","fromMap");
         if (conf.containsKey("ua")) {
             c.ua = conf.get("ua").toString();
         }
 
         if (conf.containsKey("stun")) {
             c.stun = (ArrayList) conf.get("stun");
+        }
+
+        if(conf.containsKey("notifications")) {
+
+
+            c.setNotificationsConfig(  (HashMap<String, Object>) conf.get("notifications"));
         }
 
         return c;

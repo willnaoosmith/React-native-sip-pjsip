@@ -51,7 +51,7 @@ export default class Endpoint extends EventEmitter {
 
         // Subscribe to Accounts events
         DeviceEventEmitter.addListener('pjSipRegistrationChanged', this._onRegistrationChanged.bind(this));
-
+        DeviceEventEmitter.addListener('pjSipCallServiceStopped', this._onServiceStopped.bind(this));
         // Subscribe to Calls events
         DeviceEventEmitter.addListener('pjSipCallReceived', this._onCallReceived.bind(this));
         DeviceEventEmitter.addListener('pjSipCallChanged', this._onCallChanged.bind(this));
@@ -561,6 +561,19 @@ export default class Endpoint extends EventEmitter {
          * @property {Account} account
          */
         this.emit("registration_changed", new Account(data));
+    }
+
+    /**
+     * @fires Endpoint#service_stopped
+     * @private
+     */
+    _onServiceStopped() {
+        /**
+         * Fires when the service was manually stopped by the user.
+         *
+         * @event Endpoint#service_stopped
+         */
+        this.emit("service_stopped");
     }
 
     /**
