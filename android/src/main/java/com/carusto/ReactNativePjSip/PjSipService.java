@@ -1059,6 +1059,7 @@ public class PjSipService extends Service {
 
     void emmitCallReceived(PjSipAccount account, PjSipCall call) {
         // Automatically decline incoming call when user uses GSM
+        mAudioManager.abandonAudioFocus(null);
         if (!mGSMIdle) {
             try {
                 call.hangup(new CallOpParam(true));
@@ -1190,6 +1191,7 @@ public class PjSipService extends Service {
         });
 
         mEmitter.fireCallTerminated(call);
+        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         evict(call);
     }
 
