@@ -772,6 +772,7 @@ public class PjSipService extends Service {
 
             mCalls.add(call);
             mEmitter.fireIntentHandled(intent, call.toJson());
+            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
@@ -1059,7 +1060,7 @@ public class PjSipService extends Service {
 
     void emmitCallReceived(PjSipAccount account, PjSipCall call) {
         // Automatically decline incoming call when user uses GSM
-        mAudioManager.abandonAudioFocus(null);
+        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         if (!mGSMIdle) {
             try {
                 call.hangup(new CallOpParam(true));
@@ -1191,7 +1192,7 @@ public class PjSipService extends Service {
         });
 
         mEmitter.fireCallTerminated(call);
-        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+        mAudioManager.abandonAudioFocus(null);
         evict(call);
     }
 
