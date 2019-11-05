@@ -783,7 +783,8 @@ public class PjSipService extends Service {
             int callId = intent.getIntExtra("call_id", -1);
             PjSipCall call = findCall(callId);
             call.hangup(new CallOpParam(true));
-
+            mRingtone.stop();
+            mVibrator.cancel();
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -800,7 +801,8 @@ public class PjSipService extends Service {
             prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
             call.hangup(prm);
             prm.delete();
-
+            mRingtone.stop();
+            mVibrator.cancel();
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -819,7 +821,8 @@ public class PjSipService extends Service {
 
             // Automatically put other calls on hold.
             doPauseParallelCalls(call);
-
+            mRingtone.stop();
+            mVibrator.cancel();
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -1088,7 +1091,6 @@ public class PjSipService extends Service {
              Log.w(TAG, "Failed to open application on received call", e);
          }
 
-         //if there's a call present we won't make the phone ring
          if(mCalls.size() <= 0) {
              ring(true);
          }
@@ -1103,15 +1105,9 @@ public class PjSipService extends Service {
                 "pjsip:incoming_call"
                 );
                 wl.acquire(10000);
-
-                if (mCalls.size() == 0) {
-                    mAudioManager.setSpeakerphoneOn(true);
-                }
             }
         });
 
-
-        // -----
         Log.d(TAG, "Incoming Call Received");
         mCalls.add(call);
         mEmitter.fireCallReceivedEvent(call);
@@ -1145,7 +1141,6 @@ public class PjSipService extends Service {
                         mIncallWakeLock.acquire();
                     }
 
-                    // Ensure that ringing sound is stopped
                     if (callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING && !mUseSpeaker && mAudioManager.isSpeakerphoneOn()) {
                         mAudioManager.setSpeakerphoneOn(false);
                     }
@@ -1167,7 +1162,8 @@ public class PjSipService extends Service {
 
     void emmitCallTerminated(PjSipCall call, OnCallStateParam prm) {
         final int callId = call.getId();
-
+        mRingtone.stop();
+        mVibrator.cancel();
         job(new Runnable() {
             @Override
             public void run() {
