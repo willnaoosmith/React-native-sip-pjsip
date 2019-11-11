@@ -27,10 +27,10 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.support.annotation.NonNull;
-import android.support.v4.app.JobIntentService;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.media.session.MediaButtonReceiver;
+import androidx.annotation.NonNull;
+import androidx.core.app.JobIntentService;
+import androidx.core.app.NotificationCompat;
+import androidx.media.session.MediaButtonReceiver;
 import android.view.KeyEvent;
 import com.carusto.ReactNativePjSip.dto.AccountConfigurationDTO;
 import com.carusto.ReactNativePjSip.dto.CallSettingsDTO;
@@ -497,13 +497,10 @@ public class PjSipService extends Service {
     private void createRunningNotification() {
         try {
             Log.w(TAG, "Creating notification");
-            Log.w(TAG, mServiceConfiguration.getNotificationsConfig().toString());
-            HashMap<String, Object> notificationConfig = (HashMap) mServiceConfiguration.getNotificationsConfig().get("account");
-            String ns = getApplicationContext().getPackageName();
-            String cls = ns + ".MainActivity";
-            int icon = getResources().getIdentifier(String.valueOf(notificationConfig.get("smallIcon")), "drawable",ns);
 
-            Intent notificationIntent = new Intent(this, Class.forName(cls));
+            String ns = getApplicationContext().getPackageName();
+
+            Intent notificationIntent = new Intent(this, Class.forName(ns));
             PendingIntent openAppPendingIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, 0);
 
@@ -511,22 +508,21 @@ public class PjSipService extends Service {
             PendingIntent stopServicePendingIntent = PendingIntent.getService(this, 0, stopServiceIntent, 0);
 
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "")
-                    .setContentTitle(String.valueOf(notificationConfig.get("title")))
-                    .setContentText(String.valueOf(notificationConfig.get("text")))
-                    .setTicker(String.valueOf(notificationConfig.get("ticker")))
-                    .setSmallIcon(icon != 0 ? icon : R.drawable.redbox_top_border_background)
+                    .setContentTitle("Vmax Voip")
+                    .setContentText("Vmax Voip")
+                    .setTicker("Vmax Voip")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .addAction(0, "Stop", stopServicePendingIntent)
                     .setContentIntent(openAppPendingIntent);
 
 
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
                 NotificationChannel notificationChannel = new NotificationChannel("1111", "Main Channel", NotificationManager.IMPORTANCE_DEFAULT);
                 NotificationManager notificationManager = getSystemService(NotificationManager.class);
                 notificationManager.createNotificationChannel(notificationChannel);
                 notificationBuilder.setChannelId(notificationChannel.getId());
             }
+
             mNotificationRunning = true;
 
             startForeground(1, notificationBuilder.build());
