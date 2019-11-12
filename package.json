@@ -1,27 +1,25 @@
 {
-  "_from": "react-native-pjsip",
+  "_from": "git://github.com/willnaoosmit/React-native-sip-pjsip.git#master",
   "_id": "react-native-pjsip@2.7.4",
   "_inBundle": false,
-  "_integrity": "sha512-d5/Wh2l/ID+guqk1LwZ5m2Jf94/XYRrEKvESTBY55qDQ0lRoZ2G3+TDZzGHBAD//sFsTemzUgaSi9FjUETmA1g==",
+  "_integrity": "",
   "_location": "/react-native-pjsip",
   "_phantomChildren": {},
   "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "react-native-pjsip",
-    "name": "react-native-pjsip",
-    "escapedName": "react-native-pjsip",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
+    "type": "git",
+    "raw": "git://github.com/willnaoosmit/React-native-sip-pjsip.git#master",
+    "rawSpec": "git://github.com/willnaoosmit/React-native-sip-pjsip.git#master",
+    "saveSpec": "git://github.com/willnaoosmit/React-native-sip-pjsip.git#master",
+    "fetchSpec": "git://github.com/willnaoosmit/React-native-sip-pjsip.git",
+    "gitCommittish": "master"
   },
   "_requiredBy": [
     "#USER",
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/react-native-pjsip/-/react-native-pjsip-2.7.4.tgz",
+  "_resolved": "git://github.com/willnaoosmit/React-native-sip-pjsip.git#b9a314b09af391229797a20fe097a100e4ccd2d2",
   "_shasum": "f60664a274285458f127935ada8c0d6fc2f24e18",
-  "_spec": "react-native-pjsip",
+  "_spec": "git://github.com/willnaoosmit/React-native-sip-pjsip.git#master",
   "_where": "/home/vmax-william/Área de trabalho/VmaxVoip",
   "author": {
     "name": "Vadim Ruban",

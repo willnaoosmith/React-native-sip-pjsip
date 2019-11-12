@@ -25,6 +25,7 @@ import android.app.PendingIntent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import com.carusto.ReactNativePjSip.R;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import androidx.annotation.NonNull;
@@ -287,19 +288,6 @@ public class PjSipService extends Service {
 
     @Override
     public void onDestroy() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && mWorkerThread != null) {
-            mWorkerThread.quitSafely();
-        }
-
-        try {
-            if (mEndpoint != null) {
-                mEndpoint.libDestroy();
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Failed to destroy PjSip library", e);
-        }
-        Log.d(TAG, "Stopping service");
-
         super.onDestroy();
     }
 
@@ -354,6 +342,16 @@ public class PjSipService extends Service {
 
 
     private void handle(Intent intent) {
+
+        if(!mNotificationRunning) {
+            try {
+                createRunningNotification();
+            } catch (Exception error) {
+                Log.e(TAG, "Error while creating running notification: ", error);
+            }
+            
+        }
+
         if (intent == null || intent.getAction() == null) {
             return;
         }
@@ -367,6 +365,7 @@ public class PjSipService extends Service {
                 break;
             case PjActions.ACTION_STOP_SERVICE:
                 handleStopService(intent);
+                System.exit(0);
                 break;
             // Account actions
             case PjActions.ACTION_CREATE_ACCOUNT:
@@ -433,6 +432,7 @@ public class PjSipService extends Service {
     }
 
     private void handleStart(Intent intent) {
+
         try {
             // Modify existing configuration if it changes during application reload.
             if (intent.hasExtra("service")) {
@@ -497,27 +497,31 @@ public class PjSipService extends Service {
     private void createRunningNotification() {
         try {
             Log.w(TAG, "Creating notification");
+            
+            String cls = "com.vmaxvoip.MainActivity";
 
-            String ns = getApplicationContext().getPackageName();
+            Intent notificationIntent = new Intent(this, Class.forName(cls));
 
-            Intent notificationIntent = new Intent(this, Class.forName(ns));
             PendingIntent openAppPendingIntent = PendingIntent.getActivity(this, 0,
                     notificationIntent, 0);
 
             Intent stopServiceIntent = PjActions.createStopServiceIntent(this);
             PendingIntent stopServicePendingIntent = PendingIntent.getService(this, 0, stopServiceIntent, 0);
 
+            NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Parar", stopServicePendingIntent).build();
+
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "")
-                    .setContentTitle("Vmax Voip")
-                    .setContentText("Vmax Voip")
-                    .setTicker("Vmax Voip")
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .addAction(0, "Stop", stopServicePendingIntent)
-                    .setContentIntent(openAppPendingIntent);
-
-
+                .setContentTitle("Vmax Voip")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentText("O aplicativo está sendo executado em segundo plano!")
+                .setContentIntent(openAppPendingIntent)
+                .setTicker("Vmax Voip")
+                .addAction(action)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_MIN);
+            
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel notificationChannel = new NotificationChannel("1111", "Main Channel", NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationChannel notificationChannel = new NotificationChannel("69", "Main Channel", NotificationManager.IMPORTANCE_MIN);
                 NotificationManager notificationManager = getSystemService(NotificationManager.class);
                 notificationManager.createNotificationChannel(notificationChannel);
                 notificationBuilder.setChannelId(notificationChannel.getId());
@@ -874,7 +878,6 @@ public class PjSipService extends Service {
         try {
             int callId = intent.getIntExtra("call_id", -1);
 
-            // -----
             PjSipCall call = findCall(callId);
             call.unmute();
 
@@ -1058,7 +1061,6 @@ public class PjSipService extends Service {
     }
 
     void emmitCallReceived(PjSipAccount account, PjSipCall call) {
-        // Automatically decline incoming call when user uses GSM
         mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         if (!mGSMIdle) {
             try {
@@ -1074,6 +1076,7 @@ public class PjSipService extends Service {
 
          try {
              String ns = getApplicationContext().getPackageName();
+            
              String cls = ns + ".MainActivity";
 
              Intent intent = new Intent(getApplicationContext(), Class.forName(cls));
@@ -1083,6 +1086,7 @@ public class PjSipService extends Service {
              intent.putExtra("foreground", true);
 
              startActivity(intent);
+
          } catch (Exception e) {
              Log.w(TAG, "Failed to open application on received call", e);
          }
