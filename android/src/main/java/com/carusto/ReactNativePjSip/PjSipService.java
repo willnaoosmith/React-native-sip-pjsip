@@ -288,6 +288,20 @@ public class PjSipService extends Service {
 
     @Override
     public void onDestroy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            mWorkerThread.quitSafely();
+        }
+
+        try {
+            if (mEndpoint != null) {
+                mEndpoint.libDestroy();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to destroy PjSip library", e);
+        }
+
+        unregisterReceiver(mPhoneStateChangedReceiver);
+
         super.onDestroy();
     }
 
@@ -592,7 +606,6 @@ public class PjSipService extends Service {
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
         AccountConfig cfg = new AccountConfig();
 
-        // General settings
         AuthCredInfo cred = new AuthCredInfo(
             "Digest",
             configuration.getNomalizedRegServer(),
@@ -700,7 +713,6 @@ public class PjSipService extends Service {
 
             evict(account);
 
-            // -----
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
