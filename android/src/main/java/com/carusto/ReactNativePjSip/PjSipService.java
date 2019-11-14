@@ -354,6 +354,14 @@ public class PjSipService extends Service {
         call.delete();
     }
 
+    private void exitApp() {
+        try {
+            stopForeground(true);
+            System.exit(0);
+        } catch (Exception error) {
+            Log.e(TAG, "Error while exiting: ", error);
+        }
+    }
 
     private void handle(Intent intent) {
 
@@ -410,6 +418,9 @@ public class PjSipService extends Service {
                 break;
             case PjActions.ACTION_UNHOLD_CALL:
                 handleCallReleaseFromHold(intent);
+                break;
+            case PjActions.ACTION_QUIT_APP:
+                exitApp();
                 break;
             case PjActions.ACTION_MUTE_CALL:
                 handleCallMute(intent);
@@ -522,12 +533,12 @@ public class PjSipService extends Service {
             Intent stopServiceIntent = PjActions.createStopServiceIntent(this);
             PendingIntent stopServicePendingIntent = PendingIntent.getService(this, 0, stopServiceIntent, 0);
 
-            NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Parar", stopServicePendingIntent).build();
+            NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Sair do aplicativo", stopServicePendingIntent).build();
 
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "")
                 .setContentTitle("Vmax Voip")
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentText("O aplicativo está sendo executado em segundo plano!")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentText("O aplicativo está sendo executado em segundo plano")
                 .setContentIntent(openAppPendingIntent)
                 .setTicker("Vmax Voip")
                 .addAction(action)

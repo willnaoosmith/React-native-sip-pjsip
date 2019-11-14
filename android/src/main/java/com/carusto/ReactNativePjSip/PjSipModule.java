@@ -122,6 +122,14 @@ public class PjSipModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void ExitApp(Callback callback) {
+        int callbackId = receiver.register(callback);
+        Intent intent = PjActions.createQuitAppIntent(callbackId, 1, getReactApplicationContext());
+        getReactApplicationContext().startService(intent);
+    }
+
+
+    @ReactMethod
     public void unMuteCall(int callId, Callback callback) {
         int callbackId = receiver.register(callback);
         Intent intent = PjActions.createUnMuteCallIntent(callbackId, callId, getReactApplicationContext());

@@ -2,4 +2,5 @@
 <resources>
     <string name="notification_title">Unified SIP</string>
     <string name="notification_message">Service is running...</string>
+  
 </resources> 

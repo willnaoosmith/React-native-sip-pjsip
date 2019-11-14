@@ -347,6 +347,13 @@ export default class Endpoint extends EventEmitter {
         });
     }
 
+    QuitApp() {
+        return new Promise(() => {
+            NativeModules.PjSipModule.ExitApp(() => {
+            });
+        });
+    }
+
     /**
      * @param call {Call} Call instance
      * @returns {Promise}

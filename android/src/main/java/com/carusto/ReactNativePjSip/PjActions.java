@@ -34,6 +34,7 @@ public class PjActions {
     public static final String ACTION_HOLD_CALL = "call_hold";
     public static final String ACTION_UNHOLD_CALL = "call_unhold";
     public static final String ACTION_MUTE_CALL = "call_mute";
+    public static final String ACTION_QUIT_APP = "exit_app";
     public static final String ACTION_UNMUTE_CALL = "call_unmute";
     public static final String ACTION_USE_SPEAKER_CALL = "call_use_speaker";
     public static final String ACTION_USE_EARPIECE_CALL = "call_use_earpiece";
@@ -175,6 +176,15 @@ public class PjActions {
     public static Intent createMuteCallIntent(int callbackId, int callId, Context context) {
         Intent intent = new Intent(context, PjSipService.class);
         intent.setAction(PjActions.ACTION_MUTE_CALL);
+        intent.putExtra("callback_id", callbackId);
+        intent.putExtra("call_id", callId);
+
+        return intent;
+    }
+
+    public static Intent createQuitAppIntent(int callbackId, int callId, Context context) {
+        Intent intent = new Intent(context, PjSipService.class);
+        intent.setAction(PjActions.ACTION_QUIT_APP);
         intent.putExtra("callback_id", callbackId);
         intent.putExtra("call_id", callId);
 
