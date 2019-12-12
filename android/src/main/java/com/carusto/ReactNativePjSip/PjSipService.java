@@ -533,7 +533,7 @@ public class PjSipService extends Service {
             Intent stopServiceIntent = PjActions.createStopServiceIntent(this);
             PendingIntent stopServicePendingIntent = PendingIntent.getService(this, 0, stopServiceIntent, 0);
 
-            NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Sair do aplicativo", stopServicePendingIntent).build();
+            NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Fechar o aplicativo", stopServicePendingIntent).build();
 
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "")
                 .setContentTitle("Vmax Voip")
