@@ -547,6 +547,7 @@ public class PjSipService extends Service {
             
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationChannel notificationChannel = new NotificationChannel("69", "Main Channel", NotificationManager.IMPORTANCE_MIN);
+                notificationChannel.setShowBadge(false);
                 NotificationManager notificationManager = getSystemService(NotificationManager.class);
                 notificationManager.createNotificationChannel(notificationChannel);
                 notificationBuilder.setChannelId(notificationChannel.getId());
