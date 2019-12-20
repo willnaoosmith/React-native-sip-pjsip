@@ -17,7 +17,9 @@ import android.os.Process;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.media.MediaPlayer;
 import android.annotation.SuppressLint;
+import android.media.AudioAttributes;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -29,6 +31,7 @@ import com.carusto.ReactNativePjSip.R;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import androidx.annotation.NonNull;
+import android.media.ToneGenerator;
 import androidx.core.app.JobIntentService;
 import androidx.core.app.NotificationCompat;
 import androidx.media.session.MediaButtonReceiver;
@@ -108,6 +111,8 @@ public class PjSipService extends Service {
 
     private AudioManager mAudioManager;
 
+    private MediaPlayer ringbackPlayer;
+
     private boolean mUseSpeaker = false;
 
     private PowerManager mPowerManager;
@@ -160,6 +165,29 @@ public class PjSipService extends Service {
 
         } catch (Exception e) {
             Log.e(TAG, "Error while loading Ringtone", e);
+        }
+
+        try {
+            Log.d(TAG, "pack: " + getPackageName());
+            ringbackPlayer = new MediaPlayer();
+            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback_tone");
+            Log.d(TAG, "Ringback uri: " + uir.toString());
+            ringbackPlayer.setDataSource(getApplicationContext(), uir);
+            ringbackPlayer.setLooping(true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                AudioAttributes attrs = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .setFlags(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                        .setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
+                        .build();
+                ringbackPlayer.setAudioAttributes( attrs);
+            } else {
+
+                ringbackPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+            }
+            ringbackPlayer.prepare();
+        } catch (Exception e) {
+            Log.e(TAG, "Error while loading RingBack tone", e);
         }
 
         // Start stack
@@ -516,6 +544,19 @@ public class PjSipService extends Service {
             mVibrator.cancel();
         }
         isRinging = shouldRing;
+    }
+
+
+    public void ringBack( boolean shouldRingBack) {
+
+        if(shouldRingBack) {
+            Log.w(TAG, "started Ring Back ");
+            ringbackPlayer.start();
+        }else if (ringbackPlayer.isPlaying()){
+            Log.w(TAG, "stopped Ring Back ");
+            ringbackPlayer.pause();
+            ringbackPlayer.seekTo(0);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -1275,13 +1316,26 @@ public class PjSipService extends Service {
             }
         }
     }
+    
+    /**
+     * Pauses all calls, used when received GSM call.
+     */
+    private void doUnpauseAllCalls() {
+        for (PjSipCall call : mCalls) {
+            try {
+                call.unhold();
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to put call on hold", e);
+            }
+        }
+    }
 
     protected class PhoneStateChangedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String extraState = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
 
-            if (TelephonyManager.EXTRA_STATE_RINGING.equals(extraState) || TelephonyManager.EXTRA_STATE_OFFHOOK.equals(extraState)) {
+            if ( TelephonyManager.EXTRA_STATE_OFFHOOK.equals(extraState)) {
                 Log.d(TAG, "GSM call received, pause all SIP calls and do not accept incoming SIP calls.");
 
                 mGSMIdle = false;
@@ -1295,6 +1349,16 @@ public class PjSipService extends Service {
             } else if (TelephonyManager.EXTRA_STATE_IDLE.equals(extraState)) {
                 Log.d(TAG, "GSM call released, allow to accept incoming calls.");
                 mGSMIdle = true;
+                job(new Runnable() {
+                    @Override
+                    public void run() {
+                        doUnpauseAllCalls();
+                    }
+                });
+            } else if (TelephonyManager.EXTRA_STATE_RINGING.equals(extraState)) {
+                ToneGenerator toneGen1 = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 100);
+                toneGen1.startTone(ToneGenerator.TONE_PROP_BEEP2);
+                Log.d(TAG, "GSM call ringing, tone played");
             }
         }
     }
