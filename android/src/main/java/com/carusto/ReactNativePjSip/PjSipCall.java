@@ -58,6 +58,13 @@ public class PjSipCall extends Call {
         setHold(new CallOpParam(true));
     }
 
+    public void setRinging() throws Exception {
+
+        CallOpParam prm = new CallOpParam();
+        prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
+        answer(prm);
+    }
+
     public void unhold() throws Exception {
         if (!isHeld) {
             return;
@@ -70,6 +77,7 @@ public class PjSipCall extends Call {
 
         // Send reinvite to server for release from hold
         CallOpParam prm = new CallOpParam(true);
+        prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
         prm.getOpt().setFlag(1);
 
         reinvite(prm);

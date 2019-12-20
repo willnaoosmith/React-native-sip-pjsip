@@ -821,10 +821,9 @@ public class PjSipService extends Service {
 
             // -----
             PjSipCall call = findCall(callId);
-            CallOpParam prm = new CallOpParam(true);
-            prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
+            CallOpParam prm = new CallOpParam();
+            prm.setStatusCode(pjsip_status_code.PJSIP_SC_REQUEST_TERMINATED );
             call.hangup(prm);
-            prm.delete();
             mRingtone.stop();
             mVibrator.cancel();
             mEmitter.fireIntentHandled(intent);
@@ -1133,12 +1132,38 @@ public class PjSipService extends Service {
         });
 
         Log.d(TAG, "Incoming Call Received");
+
+        try {
+            Log.d(TAG, "Incoming Call Received: sending ringing");
+            call.setRinging();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         mCalls.add(call);
         mEmitter.fireCallReceivedEvent(call);
 }
 
     void emmitCallStateChanged(PjSipCall call, OnCallStateParam prm) {
         try {
+            Log.w(TAG, "Call state updated: " + call.getInfo().getState());
+
+            //if the state is EARLY continue with the existing logic;
+            if( call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
+                if( !ringbackPlayer.isPlaying() && call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_CALLING  ) {
+                    ringBack(true);
+                }
+
+                if( ringbackPlayer.isPlaying() && call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
+                    ringBack(false);
+                }
+            }
+
+            if( isRinging && call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_NULL && call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
+                Log.w(TAG, "Ringing stopped due to state: " + call.getInfo().getState());
+                ring(false);
+
+            }
             if (call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
                 emmitCallTerminated(call, prm);
             } else {
@@ -1148,6 +1173,7 @@ public class PjSipService extends Service {
             Log.w(TAG, "Failed to handle call state event", e);
         }
     }
+
 
     void emmitCallChanged(PjSipCall call, OnCallStateParam prm) {
         try {
