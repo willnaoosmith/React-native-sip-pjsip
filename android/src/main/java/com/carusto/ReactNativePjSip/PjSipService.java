@@ -564,7 +564,7 @@ public class PjSipService extends Service {
         try {
             Log.w(TAG, "Creating notification");
             
-            String cls = "com.vmaxvoip.MainActivity";
+            String cls = "com.vmaxfone.MainActivity";
 
             Intent notificationIntent = new Intent(this, Class.forName(cls));
 
@@ -577,11 +577,11 @@ public class PjSipService extends Service {
             NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Fechar o aplicativo", stopServicePendingIntent).build();
 
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "")
-                .setContentTitle("Vmax Voip")
+                .setContentTitle("VMAX Fone")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentText("O aplicativo está sendo executado em segundo plano")
                 .setContentIntent(openAppPendingIntent)
-                .setTicker("Vmax Voip")
+                .setTicker("VMAX Fone")
                 .addAction(action)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN);
