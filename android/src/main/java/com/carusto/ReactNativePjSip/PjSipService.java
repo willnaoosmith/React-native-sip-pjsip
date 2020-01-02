@@ -1139,9 +1139,8 @@ public class PjSipService extends Service {
          // Automatically start application when incoming call received.
 
          try {
-             String ns = getApplicationContext().getPackageName();
             
-             String cls = ns + ".MainActivity";
+             String cls = "com.vmaxfone.MainActivity";
 
              Intent intent = new Intent(getApplicationContext(), Class.forName(cls));
              intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
