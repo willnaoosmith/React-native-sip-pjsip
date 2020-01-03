@@ -72,12 +72,12 @@ import org.pjsip.pjsua2.pjmedia_type;
 import org.pjsip.pjsua2.pjsip_inv_state;
 import org.pjsip.pjsua2.pjsip_status_code;
 import org.pjsip.pjsua2.pjsip_transport_type_e;
-<<<<<<< HEAD
+
 import java.util.HashMap;
-=======
+
 import org.pjsip.pjsua2.pjsua_call_media_status;
 
->>>>>>> 845801c... Added option to start a conference bridge on android
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -1180,7 +1180,7 @@ public class PjSipService extends Service {
             return;
         }
 
-<<<<<<< HEAD
+
          // Automatically start application when incoming call received.
 
          try {
@@ -1215,7 +1215,7 @@ public class PjSipService extends Service {
                 wl.acquire(10000);
             }
         });
-=======
+
         /**
          // Automatically start application when incoming call received.
          if (mAppHidden) {
@@ -1250,7 +1250,7 @@ public class PjSipService extends Service {
         }
         });
          **/
->>>>>>> 845801c... Added option to start a conference bridge on android
+
 
         Log.d(TAG, "Incoming Call Received");
 
