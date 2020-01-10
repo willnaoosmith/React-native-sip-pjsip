@@ -1086,6 +1086,7 @@ public class PjSipService extends Service {
         try {
 
             List<AudioMedia> mCallsAudioMedia = new ArrayList<>();
+
             for (PjSipCall currCall : mCalls)
             {
                 for (int i = 0; i < currCall.getInfo().getMedia().size(); i++) {
@@ -1097,6 +1098,8 @@ public class PjSipService extends Service {
                         AudioMedia audioMedia = AudioMedia.typecastFromMedia(media);
                         mCallsAudioMedia.add(audioMedia);
 
+                    } else {
+                        Log.v(TAG, "Conference" + mediaInfo.getType());
                     }
                 }
             }
