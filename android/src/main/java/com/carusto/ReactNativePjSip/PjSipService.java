@@ -239,7 +239,7 @@ public class PjSipService extends Service {
             }
 
             epConfig.getMedConfig().setHasIoqueue(true);
-            epConfig.getMedConfig().setClockRate(8000);
+            epConfig.getMedConfig().setClockRate(16000);
             epConfig.getMedConfig().setQuality(4);
             epConfig.getMedConfig().setEcOptions(1);
             epConfig.getMedConfig().setEcTailLen(200);
