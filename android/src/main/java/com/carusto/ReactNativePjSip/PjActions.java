@@ -43,7 +43,7 @@ public class PjActions {
     public static final String ACTION_REDIRECT_CALL = "call_redirect";
     public static final String ACTION_DTMF_CALL = "call_dtmf";
     public static final String ACTION_CONFERENCE_CALL = "call_conference";
-
+    public static final String ACTION_UNCONFERENCE_CALL = "call_unconference";
     public static final String ACTION_SET_SERVICE_CONFIGURATION = "set_service_configuration";
 
     public static final String EVENT_STARTED = "com.carusto.account.started";
@@ -261,6 +261,13 @@ public class PjActions {
     public static Intent createConferenceIntent(int callbackId, Context context) {
         Intent intent = new Intent(context, PjSipService.class);
         intent.setAction(PjActions.ACTION_CONFERENCE_CALL);
+        intent.putExtra("callback_id", callbackId);
+        return intent;
+    }
+
+    public static Intent createUnconferenceIntent(int callbackId, Context context) {
+        Intent intent = new Intent(context, PjSipService.class);
+        intent.setAction(PjActions.ACTION_UNCONFERENCE_CALL);
         intent.putExtra("callback_id", callbackId);
         return intent;
     }

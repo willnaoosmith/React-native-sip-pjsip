@@ -484,11 +484,13 @@ public class PjSipService extends Service {
                 handleCallDtmf(intent);
             case PjActions.ACTION_CONFERENCE_CALL:
                 handleCallConference(intent);
+                break;
+            case PjActions.ACTION_UNCONFERENCE_CALL:
+                handleCallUnconference(intent);
+                break;
             case PjActions.ACTION_CHANGE_CODEC_SETTINGS:
                 handleChangeCodecSettings(intent);
                 break;
-
-            // Configuration actions
             case PjActions.ACTION_SET_SERVICE_CONFIGURATION:
                 handleSetServiceConfiguration(intent);
                 break;
@@ -630,14 +632,28 @@ public class PjSipService extends Service {
     }
 
     private void handleAccountCreate(Intent intent) {
-        try {
-            AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
-            PjSipAccount account = doAccountCreate(accountConfiguration);
-
-            // Emmit response
-            mEmitter.fireAccountCreated(intent, account);
-        } catch (Exception e) {
-            mEmitter.fireIntentHandled(intent, e);
+        if (mAccounts.size() > 0) {
+            try {
+                PjSipAccount currAccount = mAccounts.get(0);
+                currAccount.register(true);
+                mEmitter.fireAccountCreated(intent, currAccount);
+            } catch (Exception error){
+                try {
+                    AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
+                    PjSipAccount account = doAccountCreate(accountConfiguration);
+                     mEmitter.fireAccountCreated(intent, account);
+                } catch (Exception error2) {
+                    mEmitter.fireIntentHandled(intent, error2);
+                }
+            }
+        } else {
+            try {
+                AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
+                PjSipAccount account = doAccountCreate(accountConfiguration);
+                mEmitter.fireAccountCreated(intent, account);
+            } catch (Exception e) {
+                mEmitter.fireIntentHandled(intent, e);
+            }
         }
     }
 
@@ -1118,6 +1134,15 @@ public class PjSipService extends Service {
         }
     }
 
+    private void handleCallUnconference(Intent intent) {
+        try {
+            doPauseAllCalls();
+            mEmitter.fireIntentHandled(intent);
+        } catch (Exception e) {
+            mEmitter.fireIntentHandled(intent, e);
+        }
+    }
+
     private void handleChangeCodecSettings(Intent intent) {
         try {
             Bundle codecSettings = intent.getExtras();
@@ -1183,9 +1208,6 @@ public class PjSipService extends Service {
             return;
         }
 
-
-         // Automatically start application when incoming call received.
-
          try {
             
              String cls = "com.vmaxfone.MainActivity";
@@ -1209,7 +1231,6 @@ public class PjSipService extends Service {
          job(new Runnable() {
             @Override
             public void run() {
-                // Brighten screen at least 10 seconds
 
                 PowerManager.WakeLock wl = mPowerManager.newWakeLock(
                 PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE | PowerManager.FULL_WAKE_LOCK,
@@ -1219,40 +1240,33 @@ public class PjSipService extends Service {
             }
         });
 
-        /**
-         // Automatically start application when incoming call received.
-         if (mAppHidden) {
          try {
-         String ns = getApplicationContext().getPackageName();
-         String cls = ns + ".MainActivity";
+            String cls = "com.vmaxfone.MainActivity";
+            Intent intent = new Intent(getApplicationContext(), Class.forName(cls));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.EXTRA_DOCK_STATE_CAR);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            intent.putExtra("foreground", true);
+            startActivity(intent);
 
-         Intent intent = new Intent(getApplicationContext(), Class.forName(cls));
-         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.EXTRA_DOCK_STATE_CAR);
-         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-         intent.putExtra("foreground", true);
-
-         startActivity(intent);
          } catch (Exception e) {
-         Log.w(TAG, "Failed to open application on received call", e);
-         }
+            Log.w(TAG, "Failed to open application on received call", e);
          }
 
-         job(new Runnable() {
+        job(new Runnable() {
         @Override
-        public void run() {
-        // Brighten screen at least 10 seconds
-        PowerManager.WakeLock wl = mPowerManager.newWakeLock(
-        PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE | PowerManager.FULL_WAKE_LOCK,
-        "incoming_call"
-        );
-        wl.acquire(10000);
+        
+            public void run() {
+                PowerManager.WakeLock wl = mPowerManager.newWakeLock(
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE | PowerManager.FULL_WAKE_LOCK,
+                    "incoming_call"
+                );
+                wl.acquire(10000);
 
-        if (mCalls.size() == 0) {
-        mAudioManager.setSpeakerphoneOn(true);
-        }
-        }
+                if (mCalls.size() == 0) {
+                    mAudioManager.setSpeakerphoneOn(true);
+                }
+            }
         });
-         **/
 
 
         Log.d(TAG, "Incoming Call Received");
@@ -1272,7 +1286,6 @@ public class PjSipService extends Service {
         try {
             Log.w(TAG, "Call state updated: " + call.getInfo().getState());
 
-            //if the state is EARLY continue with the existing logic;
             if( call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
                 if( !ringbackPlayer.isPlaying() && call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_CALLING  ) {
                     ringBack(true);

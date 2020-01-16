@@ -504,6 +504,18 @@ export default class Endpoint extends EventEmitter {
         });
     }
 
+    unconferenceCall() {
+        return new Promise((resolve, reject) => {
+            NativeModules.PjSipModule.unconferenceCall( (successful, data) => {
+                if (successful) {
+                    resolve(data);
+                } else {
+                    reject(data);
+                }
+            });
+        });
+    }
+
     activateAudioSession() {
         return new Promise((resolve, reject) => {
             NativeModules.PjSipModule.activateAudioSession((successful, data) => {
