@@ -860,7 +860,8 @@ public class PjSipService extends Service {
             callOpParam.delete();
 
             // Automatically put other calls on hold.
-//            doPauseParallelCalls(call);
+            
+            doPauseParallelCalls(call);
 
             mCalls.add(call);
             mEmitter.fireIntentHandled(intent, call.toJson());
