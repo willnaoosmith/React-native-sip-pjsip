@@ -625,28 +625,14 @@ public class PjSipService extends Service {
     }
 
     private void handleAccountCreate(Intent intent) {
-        if (mAccounts.size() > 0) {
-            try {
-                PjSipAccount currAccount = mAccounts.get(0);
-                currAccount.register(true);
-                mEmitter.fireAccountCreated(intent, currAccount);
-            } catch (Exception error){
-                try {
-                    AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
-                    PjSipAccount account = doAccountCreate(accountConfiguration);
-                     mEmitter.fireAccountCreated(intent, account);
-                } catch (Exception error2) {
-                    mEmitter.fireIntentHandled(intent, error2);
-                }
-            }
-        } else {
-            try {
-                AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
-                PjSipAccount account = doAccountCreate(accountConfiguration);
-                mEmitter.fireAccountCreated(intent, account);
-            } catch (Exception e) {
-                mEmitter.fireIntentHandled(intent, e);
-            }
+        try {
+            AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
+            PjSipAccount account = doAccountCreate(accountConfiguration);
+
+            // Emmit response
+            mEmitter.fireAccountCreated(intent, account);
+        } catch (Exception e) {
+            mEmitter.fireIntentHandled(intent, e);
         }
     }
 
@@ -679,12 +665,13 @@ public class PjSipService extends Service {
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
         AccountConfig cfg = new AccountConfig();
 
+        // General settings
         AuthCredInfo cred = new AuthCredInfo(
-                "Digest",
-                configuration.getNomalizedRegServer(),
-                configuration.getUsername(),
-                0,
-                configuration.getPassword()
+            "Digest",
+            configuration.getNomalizedRegServer(),
+            configuration.getUsername(),
+            0,
+            configuration.getPassword()
         );
 
         String idUri = configuration.getIdUri();
@@ -786,12 +773,12 @@ public class PjSipService extends Service {
 
             evict(account);
 
+            // -----
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
     }
-
     private void handleCallMake(Intent intent) {
         try {
             int accountId = intent.getIntExtra("account_id", -1);
