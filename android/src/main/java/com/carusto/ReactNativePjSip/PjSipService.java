@@ -179,12 +179,10 @@ public class PjSipService extends Service {
         try {
             Log.d(TAG, "pack: " + getPackageName());
             ringbackPlayer = new MediaPlayer();
-            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback");
+            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback_tone");
             Log.d(TAG, "Ringback uri: " + uir.toString());
-
             ringbackPlayer.setDataSource(getApplicationContext(), uir);
             ringbackPlayer.setLooping(true);
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 AudioAttributes attrs = new AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
@@ -365,6 +363,13 @@ public class PjSipService extends Service {
 
         // Remove link to account
         mAccounts.remove(account);
+
+        // Remove transport
+        try {
+            mEndpoint.transportClose(account.getTransportId());
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to close transport for account", e);
+        }
 
         // Remove account in PjSip
         account.delete();
@@ -627,14 +632,28 @@ public class PjSipService extends Service {
     }
 
     private void handleAccountCreate(Intent intent) {
-        try {
-            AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
-            PjSipAccount account = doAccountCreate(accountConfiguration);
-
-            // Emmit response
-            mEmitter.fireAccountCreated(intent, account);
-        } catch (Exception e) {
-            mEmitter.fireIntentHandled(intent, e);
+        if (mAccounts.size() > 0) {
+            try {
+                PjSipAccount currAccount = mAccounts.get(0);
+                currAccount.register(true);
+                mEmitter.fireAccountCreated(intent, currAccount);
+            } catch (Exception error){
+                try {
+                    AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
+                    PjSipAccount account = doAccountCreate(accountConfiguration);
+                     mEmitter.fireAccountCreated(intent, account);
+                } catch (Exception error2) {
+                    mEmitter.fireIntentHandled(intent, error2);
+                }
+            }
+        } else {
+            try {
+                AccountConfigurationDTO accountConfiguration = AccountConfigurationDTO.fromIntent(intent);
+                PjSipAccount account = doAccountCreate(accountConfiguration);
+                mEmitter.fireAccountCreated(intent, account);
+            } catch (Exception e) {
+                mEmitter.fireIntentHandled(intent, e);
+            }
         }
     }
 
@@ -667,13 +686,12 @@ public class PjSipService extends Service {
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
         AccountConfig cfg = new AccountConfig();
 
-        // General settings
         AuthCredInfo cred = new AuthCredInfo(
-            "Digest",
-            configuration.getNomalizedRegServer(),
-            configuration.getUsername(),
-            0,
-            configuration.getPassword()
+                "Digest",
+                configuration.getNomalizedRegServer(),
+                configuration.getUsername(),
+                0,
+                configuration.getPassword()
         );
 
         String idUri = configuration.getIdUri();
@@ -775,12 +793,12 @@ public class PjSipService extends Service {
 
             evict(account);
 
-            // -----
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
     }
+
     private void handleCallMake(Intent intent) {
         try {
             int accountId = intent.getIntExtra("account_id", -1);
