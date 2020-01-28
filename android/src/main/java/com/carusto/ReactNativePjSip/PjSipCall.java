@@ -59,7 +59,6 @@ public class PjSipCall extends Call {
     }
 
     public void setRinging() throws Exception {
-
         CallOpParam prm = new CallOpParam();
         prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
         answer(prm);
