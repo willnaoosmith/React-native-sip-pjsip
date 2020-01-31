@@ -363,6 +363,8 @@ public class PjSipService extends Service {
 
         // Remove link to account
         mAccounts.remove(account);
+        
+        stopForeground(true);
 
         // Remove account in PjSip
         account.delete();
