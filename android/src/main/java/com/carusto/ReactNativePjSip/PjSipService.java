@@ -395,15 +395,6 @@ public class PjSipService extends Service {
 
     private void handle(Intent intent) {
 
-        if(!mNotificationRunning) {
-            try {
-                createRunningNotification();
-            } catch (Exception error) {
-                Log.e(TAG, "Error while creating running notification: ", error);
-            }
-            
-        }
-
         if (intent == null || intent.getAction() == null) {
             return;
         }
@@ -499,11 +490,6 @@ public class PjSipService extends Service {
                 if (!newServiceConfiguration.equals(mServiceConfiguration)) {
                     updateServiceConfiguration(newServiceConfiguration);
                 }
-            }
-
-            if(!mNotificationRunning) {
-                createRunningNotification();
-
             }
 
             CodecInfoVector codVect = mEndpoint.codecEnum();
@@ -638,6 +624,7 @@ public class PjSipService extends Service {
     }
 
     private void handleAccountRegister(Intent intent) {
+
         try {
             int accountId = intent.getIntExtra("account_id", -1);
             boolean renew = intent.getBooleanExtra("renew", false);
@@ -664,6 +651,15 @@ public class PjSipService extends Service {
     }
 
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
+        
+        if(!mNotificationRunning) {
+            try {
+                createRunningNotification();
+            } catch (Exception error) {
+                Log.e(TAG, "Error while creating running notification: ", error);
+            }
+        }
+
         AccountConfig cfg = new AccountConfig();
 
         // General settings
