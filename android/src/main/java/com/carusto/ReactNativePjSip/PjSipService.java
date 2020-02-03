@@ -10,7 +10,6 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Process;
@@ -364,8 +363,6 @@ public class PjSipService extends Service {
         // Remove link to account
         mAccounts.remove(account);
         
-        stopForeground(true);
-
         // Remove account in PjSip
         account.delete();
 
