@@ -178,7 +178,7 @@ public class PjSipService extends Service {
         try {
             Log.d(TAG, "pack: " + getPackageName());
             ringbackPlayer = new MediaPlayer();
-            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback_tone");
+            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback");
             Log.d(TAG, "Ringback uri: " + uir.toString());
             ringbackPlayer.setDataSource(getApplicationContext(), uir);
             ringbackPlayer.setLooping(true);
