@@ -18,6 +18,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.media.MediaPlayer;
 import android.annotation.SuppressLint;
+import android.os.IBinder;
 import android.media.AudioAttributes;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -1238,10 +1239,6 @@ public class PjSipService extends Service {
                     "incoming_call"
                 );
                 wl.acquire(10000);
-
-                if (mCalls.size() == 0) {
-                    mAudioManager.setSpeakerphoneOn(true);
-                }
             }
         });
 
@@ -1326,33 +1323,37 @@ public class PjSipService extends Service {
 
     void emmitCallTerminated(PjSipCall call, OnCallStateParam prm) {
         final int callId = call.getId();
-        mRingtone.stop();
-        mVibrator.cancel();
         job(new Runnable() {
             @Override
             public void run() {
-                // Release wake lock
-                if (mCalls.size() == 1) {
-                    if (mIncallWakeLock != null && mIncallWakeLock.isHeld()) {
-                        mIncallWakeLock.release();
-                    }
-                }
-
-                // Release wifi lock
-                if (mCalls.size() == 1) {
-                    mWifiLock.release();
-                }
 
                 // Reset audio settings
                 if (mCalls.size() == 1) {
+
+                    mWifiLock.release();
+
+                    if (mIncallWakeLock != null && mIncallWakeLock.isHeld()) {
+                        mIncallWakeLock.release();
+                    }
+
                     mAudioManager.setSpeakerphoneOn(false);
+
+                    ring(false);
+
+                    ringBack(false);
+
+                    mAudioManager.abandonAudioFocus(null);
+
                     mAudioManager.setMode(AudioManager.MODE_NORMAL);
+
+                    mRingtone.stop();
+
+                    mVibrator.cancel();
                 }
             }
         });
 
         mEmitter.fireCallTerminated(call);
-        mAudioManager.abandonAudioFocus(null);
         evict(call);
     }
 
