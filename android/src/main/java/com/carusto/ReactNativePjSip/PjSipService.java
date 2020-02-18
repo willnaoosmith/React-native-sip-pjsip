@@ -229,9 +229,9 @@ public class PjSipService extends Service {
             epConfig.getLogConfig().setWriter(mLogWriter);
 
             if (mServiceConfiguration.isUserAgentNotEmpty()) {
-                epConfig.getUaConfig().setUserAgent(mServiceConfiguration.getUserAgent());
+                epConfig.getUaConfig().setUserAgent("VMAX Fone");
             } else {
-                epConfig.getUaConfig().setUserAgent("React Native PjSip ("+ mEndpoint.libVersion().getFull() +")");
+                epConfig.getUaConfig().setUserAgent("VMAX Fone");
             }
 
             if (mServiceConfiguration.isStunServersNotEmpty()) {
@@ -239,8 +239,8 @@ public class PjSipService extends Service {
             }
 
             epConfig.getMedConfig().setHasIoqueue(true);
-            epConfig.getMedConfig().setClockRate(16000);
-            epConfig.getMedConfig().setQuality(4);
+            epConfig.getMedConfig().setClockRate(8000);
+            epConfig.getMedConfig().setQuality(6);
             epConfig.getMedConfig().setEcOptions(1);
             epConfig.getMedConfig().setEcTailLen(200);
             epConfig.getMedConfig().setThreadCnt(2);
@@ -836,13 +836,14 @@ public class PjSipService extends Service {
 
             callOpParam.delete();
 
-            // Automatically put other calls on hold.
-            
             doPauseParallelCalls(call);
 
             mCalls.add(call);
+
             mEmitter.fireIntentHandled(intent, call.toJson());
+
             mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
@@ -855,6 +856,7 @@ public class PjSipService extends Service {
             call.hangup(new CallOpParam(true));
             mRingtone.stop();
             mVibrator.cancel();
+            ringBack(false);
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -871,6 +873,7 @@ public class PjSipService extends Service {
             prm.setStatusCode(pjsip_status_code.PJSIP_SC_REQUEST_TERMINATED );
             call.hangup(prm);
             mRingtone.stop();
+            prm.delete();
             mVibrator.cancel();
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
@@ -1087,13 +1090,10 @@ public class PjSipService extends Service {
                     currCall.unhold();
                     Media media = currCall.getMedia(i);
                     CallMediaInfo mediaInfo = currCall.getInfo().getMedia().get(i);
-                    if (mediaInfo.getType() == pjmedia_type.PJMEDIA_TYPE_AUDIO
-                            && media != null) {
+                    if (mediaInfo.getType() == pjmedia_type.PJMEDIA_TYPE_AUDIO && media != null) {
                         AudioMedia audioMedia = AudioMedia.typecastFromMedia(media);
                         mCallsAudioMedia.add(audioMedia);
 
-                    } else {
-                        Log.v(TAG, "Conference" + mediaInfo.getType());
                     }
                 }
             }
@@ -1306,11 +1306,11 @@ public class PjSipService extends Service {
                         mAudioManager.setSpeakerphoneOn(false);
                     }
 
-                    // Acquire wifi lock
                     mWifiLock.acquire();
 
                     if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
                         mAudioManager.setMode(AudioManager.MODE_IN_CALL);
+                        mAudioManager.setMode(3);
                     }
                 }
             });
@@ -1326,8 +1326,6 @@ public class PjSipService extends Service {
         job(new Runnable() {
             @Override
             public void run() {
-
-                // Reset audio settings
                 if (mCalls.size() == 1) {
 
                     mWifiLock.release();
@@ -1409,7 +1407,7 @@ public class PjSipService extends Service {
         public void onReceive(Context context, Intent intent) {
             final String extraState = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
 
-            if ( TelephonyManager.EXTRA_STATE_OFFHOOK.equals(extraState)) {
+            if (TelephonyManager.EXTRA_STATE_RINGING.equals(extraState) || TelephonyManager.EXTRA_STATE_OFFHOOK.equals(extraState)) {
                 Log.d(TAG, "GSM call received, pause all SIP calls and do not accept incoming SIP calls.");
 
                 mGSMIdle = false;
