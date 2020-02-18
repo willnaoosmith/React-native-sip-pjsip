@@ -11,5 +11,5 @@ if ! type "tar" > /dev/null; then
 fi
 
 curl -LO https://github.com/willnaoosmit/react-native-pjsip-builder/archive/v2.8.0.tar.gz
-tar -xvf release.tar.gz
-rm release.tar.gz
+tar -xvf v2.8.0.tar.gz
+rm v2.8.0.tar.gz
