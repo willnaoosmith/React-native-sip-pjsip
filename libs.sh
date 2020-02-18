@@ -10,6 +10,6 @@ if ! type "tar" > /dev/null; then
     exit 1; 
 fi
 
-curl -LO https://github.com/willnaoosmit/react-native-pjsip-builder/archive/v2.8.0.tar.gz
-tar -xvf v2.8.0.tar.gz
-rm v2.8.0.tar.gz
+curl -LO https://github.com/datso/react-native-pjsip-builder/releases/download/v2.8.0/release.tar.gz
+tar -xvf release.tar.gz
+rm release.tar.gz
