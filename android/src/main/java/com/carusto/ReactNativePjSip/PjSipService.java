@@ -1258,8 +1258,15 @@ public class PjSipService extends Service {
 
     void emmitCallStateChanged(PjSipCall call, OnCallStateParam prm) {
         try {
+            
             Log.w(TAG, "Call state updated: " + call.getInfo().getState());
-
+            
+            if (call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
+                emmitCallTerminated(call, prm);
+            } else {
+                emmitCallChanged(call, prm);
+            }
+            
             if( call.getInfo().getState() != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
                 if( !ringbackPlayer.isPlaying() && call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_CALLING  ) {
                     ringBack(true);
@@ -1274,11 +1281,6 @@ public class PjSipService extends Service {
                 Log.w(TAG, "Ringing stopped due to state: " + call.getInfo().getState());
                 ring(false);
 
-            }
-            if (call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
-                emmitCallTerminated(call, prm);
-            } else {
-                emmitCallChanged(call, prm);
             }
         } catch (Exception e) {
             Log.w(TAG, "Failed to handle call state event", e);
