@@ -795,7 +795,17 @@ public class PjSipService extends Service {
 
             mEmitter.fireIntentHandled(intent, call.toJson());
 
-            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+
+			int currentVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+			int maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+
+			float percent = 0.7f;
+
+			int seventyVolume = (int) (maxVolume*percent);
+			
+			mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, seventyVolume, 0);
 
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -1149,7 +1159,15 @@ public class PjSipService extends Service {
     }
 
     void emmitCallReceived(PjSipAccount account, PjSipCall call) {
-        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+
+        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+
+		int currentVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+		int maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		float percent = 0.7f;
+		int seventyVolume = (int) (maxVolume*percent);
+		mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, seventyVolume, 0);
+
         if (!mGSMIdle) {
             try {
                 call.hangup(new CallOpParam(true));
