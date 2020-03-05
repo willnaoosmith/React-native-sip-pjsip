@@ -203,11 +203,13 @@ public class PjSipService extends Service {
             }
 
             epConfig.getMedConfig().setHasIoqueue(true);
-            epConfig.getMedConfig().setClockRate(8000);
-            epConfig.getMedConfig().setQuality(6);
+            epConfig.getMedConfig().setClockRate(44800);
+            epConfig.getMedConfig().setSndClockRate(44800);
+            epConfig.getMedConfig().setQuality(10);
             epConfig.getMedConfig().setEcOptions(1);
             epConfig.getMedConfig().setEcTailLen(200);
             epConfig.getMedConfig().setThreadCnt(2);
+            epConfig.getMedConfig().setNoVad(true);
             mEndpoint.libInit(epConfig);
 
             mTrash.add(epConfig);
@@ -1251,6 +1253,10 @@ public class PjSipService extends Service {
                 @Override
                 public void run() {
 
+                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
+                        mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                    }
+
                     if (mIncallWakeLock == null) {
                         mIncallWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "incall");
                     }
@@ -1284,9 +1290,6 @@ public class PjSipService extends Service {
 
                     mWifiLock.acquire();
 
-                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
-                        mAudioManager.setMode(AudioManager.MODE_IN_CALL);
-                    }
                 }
             });
         } catch (Exception e) {
