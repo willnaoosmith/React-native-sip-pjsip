@@ -1254,10 +1254,29 @@ public class PjSipService extends Service {
                     if (mIncallWakeLock == null) {
                         mIncallWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "incall");
                     }
+
                     if (!mIncallWakeLock.isHeld()) {
                         mIncallWakeLock.acquire();
+
                     }
 
+                    if( callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
+
+                        if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING ) {
+                            ringBack(true);
+                        }
+
+                        if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
+                            ringBack(false);
+                        }
+
+                    }
+
+                    if( isRinging && callState != pjsip_inv_state.PJSIP_INV_STATE_NULL && callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
+                        Log.w(TAG, "Ringing stopped due to state: " + callState);
+                        ring(false);
+
+                    }
 
                     if (callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING && !mUseSpeaker && mAudioManager.isSpeakerphoneOn()) {
                         mAudioManager.setSpeakerphoneOn(false);
