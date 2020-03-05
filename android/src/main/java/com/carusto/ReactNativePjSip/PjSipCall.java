@@ -170,7 +170,6 @@ public class PjSipCall extends Call {
     public void onCallMediaEvent(OnCallMediaEventParam prm) {
         super.onCallMediaEvent(prm);
 
-        // Hack to resize all video windows.
         for (PjSipVideoMediaChange listener : mediaListeners) {
             listener.onChange();
         }
@@ -193,28 +192,31 @@ public class PjSipCall extends Call {
             if (mediaInfo.getType() == pjmedia_type.PJMEDIA_TYPE_AUDIO
                     && media != null
                     && mediaInfo.getStatus() == pjsua_call_media_status.PJSUA_CALL_MEDIA_ACTIVE) {
+
                 AudioMedia audioMedia = AudioMedia.typecastFromMedia(media);
 
-                // connect the call audio media to sound device
                 try {
                     AudDevManager mgr = account.getService().getAudDevManager();
 
                     try {
-                        audioMedia.adjustRxLevel((float) 2.0);
-                        audioMedia.adjustTxLevel((float) 2.0);
+                        audioMedia.adjustRxLevel((float) 7.5);
+
+                        audioMedia.adjustTxLevel((float) 5.0);
+
                     } catch (Exception exc) {
                         Log.e(TAG, "An error while adjusting audio levels", exc);
                     }
 
                     audioMedia.startTransmit(mgr.getPlaybackDevMedia());
+
                     mgr.getCaptureDevMedia().startTransmit(audioMedia);
+
                 } catch (Exception exc) {
                     Log.e(TAG, "An error occurs while connecting audio media to sound device", exc);
                 }
             }
         }
 
-        // Emmit changes
         getService().emmitCallUpdated(this);
     }
 
@@ -224,11 +226,9 @@ public class PjSipCall extends Call {
         try {
             CallInfo info = getInfo();
 
-            // -----
             AudioManager audioManager = (AudioManager) getService().getBaseContext().getSystemService(Context.AUDIO_SERVICE);
             boolean speaker = audioManager.isSpeakerphoneOn();
 
-            // -----
             int connectDuration = -1;
 
             if (info.getState() == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED ||
@@ -236,18 +236,13 @@ public class PjSipCall extends Call {
                 connectDuration = info.getConnectDuration().getSec();
             }
 
-            // -----
             json.put("id", getId());
             json.put("callId", info.getCallIdString());
             json.put("accountId", account.getId());
-
-            // -----
             json.put("localContact", info.getLocalContact());
             json.put("localUri", info.getLocalUri());
             json.put("remoteContact", info.getRemoteContact());
             json.put("remoteUri", info.getRemoteUri());
-
-            // -----
             json.put("state", info.getState());
             json.put("stateText", info.getStateText());
             json.put("connectDuration", connectDuration);
@@ -263,16 +258,11 @@ public class PjSipCall extends Call {
             }
 
             json.put("lastReason", info.getLastReason());
-
-            // -----
             json.put("remoteOfferer", info.getRemOfferer());
             json.put("remoteAudioCount", info.getRemAudioCount());
             json.put("remoteVideoCount", info.getRemVideoCount());
-
-            // -----
             json.put("audioCount", info.getSetting().getAudioCount());
             json.put("videoCount", info.getSetting().getVideoCount());
-
             json.put("media", mediaInfoToJson(info.getMedia()));
             json.put("provisionalMedia", mediaInfoToJson(info.getProvMedia()));
 
