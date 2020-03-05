@@ -156,7 +156,7 @@ public class PjSipService extends Service {
                         .setFlags(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                         .setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
                         .build();
-                ringbackPlayer.setAudioAttributes( attrs);
+                ringbackPlayer.setAudioAttributes(attrs);
             } else {
 
                 ringbackPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
@@ -691,7 +691,9 @@ public class PjSipService extends Service {
 
         int cap_dev = cfg.getVideoConfig().getDefaultCaptureDevice();
         mEndpoint.vidDevManager().setCaptureOrient(cap_dev, pjmedia_orient.PJMEDIA_ORIENT_ROTATE_270DEG, true);
-
+        mEndpoint.audDevManager().setOutputVolume(100,true);
+        mEndpoint.audDevManager().setInputVolume(100,true);
+        
         PjSipAccount account = new PjSipAccount(this, transportId, configuration);
         account.create(cfg);
 
