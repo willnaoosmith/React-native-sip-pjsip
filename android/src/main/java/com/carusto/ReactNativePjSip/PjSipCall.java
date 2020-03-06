@@ -199,9 +199,9 @@ public class PjSipCall extends Call {
                     AudDevManager mgr = account.getService().getAudDevManager();
 
                     try {
-                        audioMedia.adjustRxLevel((float) 7.5);
+                        audioMedia.adjustRxLevel((float) 5.0);
 
-                        audioMedia.adjustTxLevel((float) 5.0);
+                        audioMedia.adjustTxLevel((float) 7.0);
 
                     } catch (Exception exc) {
                         Log.e(TAG, "An error while adjusting audio levels", exc);
