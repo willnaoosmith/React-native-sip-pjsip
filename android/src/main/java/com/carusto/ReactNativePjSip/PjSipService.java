@@ -328,6 +328,8 @@ public class PjSipService extends Service {
         
         account.delete();
 
+        stopForeground(true);
+
     }
 
     public void evict(final PjSipCall call) {
@@ -606,14 +608,6 @@ public class PjSipService extends Service {
 
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
         
-        if(!mNotificationRunning) {
-            try {
-                createRunningNotification();
-            } catch (Exception error) {
-                Log.e(TAG, "Error while creating running notification: ", error);
-            }
-        }
-
         AccountConfig cfg = new AccountConfig();
 
         AuthCredInfo cred = new AuthCredInfo(
@@ -1141,6 +1135,27 @@ public class PjSipService extends Service {
     }
 
     void emmitRegistrationChanged(PjSipAccount account, OnRegStateParam prm) {
+
+        
+        try {
+
+            if (account.getInfo().getRegStatusText().equals("OK")) {
+
+                if(!mNotificationRunning) {
+                    try {
+                        createRunningNotification();
+                    } catch (Exception error) {
+                        Log.e(TAG, "Error while creating running notification: ", error);
+                    }
+                }
+
+            }
+
+        } catch (Exception e) {
+
+            Log.e(TAG, "Error while creating running notification: ", e);
+        }
+
         getEmitter().fireRegistrationChangeEvent(account);
     }
 
@@ -1171,7 +1186,6 @@ public class PjSipService extends Service {
              intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
              intent.addCategory(Intent.CATEGORY_LAUNCHER);
              intent.putExtra("foreground", true);
-
              startActivity(intent);
 
          } catch (Exception e) {
