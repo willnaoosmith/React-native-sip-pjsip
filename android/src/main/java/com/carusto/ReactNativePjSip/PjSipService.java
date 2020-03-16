@@ -327,7 +327,7 @@ public class PjSipService extends Service {
         mAccounts.remove(account);
         
         account.delete();
-
+        mNotificationRunning = false;
         stopForeground(true);
 
     }
@@ -349,6 +349,7 @@ public class PjSipService extends Service {
 
     private void exitApp() {
         try {
+        	mNotificationRunning = true;
             stopForeground(true);
             android.os.Process.killProcess(android.os.Process.myPid());
             System.exit(0);
