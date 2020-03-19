@@ -327,8 +327,6 @@ public class PjSipService extends Service {
         mAccounts.remove(account);
         
         account.delete();
-        mNotificationRunning = false;
-        stopForeground(true);
 
     }
 
@@ -349,7 +347,6 @@ public class PjSipService extends Service {
 
     private void exitApp() {
         try {
-        	mNotificationRunning = true;
             stopForeground(true);
             android.os.Process.killProcess(android.os.Process.myPid());
             System.exit(0);
@@ -609,6 +606,14 @@ public class PjSipService extends Service {
 
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
         
+        if(!mNotificationRunning) {
+            try {
+                createRunningNotification();
+            } catch (Exception error) {
+                Log.e(TAG, "Error while creating running notification: ", error);
+            }
+        }
+
         AccountConfig cfg = new AccountConfig();
 
         AuthCredInfo cred = new AuthCredInfo(
@@ -1136,27 +1141,6 @@ public class PjSipService extends Service {
     }
 
     void emmitRegistrationChanged(PjSipAccount account, OnRegStateParam prm) {
-
-        
-        try {
-
-            if (account.getInfo().getRegStatusText().equals("OK")) {
-
-                if(!mNotificationRunning) {
-                    try {
-                        createRunningNotification();
-                    } catch (Exception error) {
-                        Log.e(TAG, "Error while creating running notification: ", error);
-                    }
-                }
-
-            }
-
-        } catch (Exception e) {
-
-            Log.e(TAG, "Error while creating running notification: ", e);
-        }
-
         getEmitter().fireRegistrationChangeEvent(account);
     }
 
@@ -1187,6 +1171,7 @@ public class PjSipService extends Service {
              intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT );
              intent.addCategory(Intent.CATEGORY_LAUNCHER);
              intent.putExtra("foreground", true);
+
              startActivity(intent);
 
          } catch (Exception e) {
@@ -1271,7 +1256,7 @@ public class PjSipService extends Service {
                 public void run() {
 
                     if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
-                        mAudioManager.setMode(AudioManager.MODE_IN_CALL);
+                        mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                     }
 
                     if (mIncallWakeLock == null) {
@@ -1286,7 +1271,7 @@ public class PjSipService extends Service {
                     if( callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
 
                         if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING ) {
-                            ringBack(true);
+                            //ringBack(true);
                         }
 
                         if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
