@@ -1273,7 +1273,7 @@ public class PjSipService extends Service {
                 @Override
                 public void run() {
 
-                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
+                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED || callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
                         mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                     }
 
