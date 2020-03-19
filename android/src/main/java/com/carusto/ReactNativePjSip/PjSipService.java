@@ -347,6 +347,7 @@ public class PjSipService extends Service {
 
     private void exitApp() {
         try {
+            mNotificationRunning = false;
             stopForeground(true);
             android.os.Process.killProcess(android.os.Process.myPid());
             System.exit(0);
@@ -606,14 +607,6 @@ public class PjSipService extends Service {
 
     private PjSipAccount doAccountCreate(AccountConfigurationDTO configuration) throws Exception {
         
-        if(!mNotificationRunning) {
-            try {
-                createRunningNotification();
-            } catch (Exception error) {
-                Log.e(TAG, "Error while creating running notification: ", error);
-            }
-        }
-
         AccountConfig cfg = new AccountConfig();
 
         AuthCredInfo cred = new AuthCredInfo(
@@ -720,6 +713,10 @@ public class PjSipService extends Service {
             }
 
             evict(account);
+
+            mNotificationRunning = false;
+            
+            stopForeground(true);
 
             mEmitter.fireIntentHandled(intent);
 
@@ -1141,6 +1138,27 @@ public class PjSipService extends Service {
     }
 
     void emmitRegistrationChanged(PjSipAccount account, OnRegStateParam prm) {
+
+
+        try {
+
+            if (account.getInfo().getRegStatusText().equals("OK")) {
+
+                if(!mNotificationRunning) {
+                    try {
+                        createRunningNotification();
+                    } catch (Exception error) {
+                        Log.e(TAG, "Error while creating running notification: ", error);
+                    }
+                }
+
+            }
+
+        } catch (Exception e) {
+
+            Log.e(TAG, "Error while creating running notification: ", e);
+        }
+
         getEmitter().fireRegistrationChangeEvent(account);
     }
 
