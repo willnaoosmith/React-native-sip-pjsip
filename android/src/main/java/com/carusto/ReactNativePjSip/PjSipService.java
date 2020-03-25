@@ -119,7 +119,7 @@ public class PjSipService extends Service {
     }
 
     private void load() {
-
+        // Load native libraries
         try {
             System.loadLibrary("openh264");
         } catch (UnsatisfiedLinkError error) {
@@ -146,7 +146,7 @@ public class PjSipService extends Service {
         try {
             Log.d(TAG, "pack: " + getPackageName());
             ringbackPlayer = new MediaPlayer();
-            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback");
+            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback_tone");
             Log.d(TAG, "Ringback uri: " + uir.toString());
             ringbackPlayer.setDataSource(getApplicationContext(), uir);
             ringbackPlayer.setLooping(true);
@@ -156,7 +156,7 @@ public class PjSipService extends Service {
                         .setFlags(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                         .setLegacyStreamType(AudioManager.STREAM_VOICE_CALL)
                         .build();
-                ringbackPlayer.setAudioAttributes(attrs);
+                ringbackPlayer.setAudioAttributes( attrs);
             } else {
 
                 ringbackPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
@@ -166,11 +166,13 @@ public class PjSipService extends Service {
             Log.e(TAG, "Error while loading RingBack tone", e);
         }
 
+        // Start stack
         try {
             mEndpoint = new Endpoint();
             mEndpoint.libCreate();
             mEndpoint.libRegisterThread(Thread.currentThread().getName());
 
+            // Register main thread
             Handler uiHandler = new Handler(Looper.getMainLooper());
             Runnable runnable = new Runnable() {
                 @Override
@@ -184,6 +186,7 @@ public class PjSipService extends Service {
             };
             uiHandler.post(runnable);
 
+            // Configure endpoint
             EpConfig epConfig = new EpConfig();
 
             epConfig.getLogConfig().setLevel(10);
@@ -193,9 +196,9 @@ public class PjSipService extends Service {
             epConfig.getLogConfig().setWriter(mLogWriter);
 
             if (mServiceConfiguration.isUserAgentNotEmpty()) {
-                epConfig.getUaConfig().setUserAgent("VMAX Fone");
+                epConfig.getUaConfig().setUserAgent(mServiceConfiguration.getUserAgent());
             } else {
-                epConfig.getUaConfig().setUserAgent("VMAX Fone");
+                epConfig.getUaConfig().setUserAgent("React Native PjSip ("+ mEndpoint.libVersion().getFull() +")");
             }
 
             if (mServiceConfiguration.isStunServersNotEmpty()) {
@@ -203,15 +206,16 @@ public class PjSipService extends Service {
             }
 
             epConfig.getMedConfig().setHasIoqueue(true);
-            epConfig.getMedConfig().setClockRate(44800);
-            epConfig.getMedConfig().setSndClockRate(44800);
-            epConfig.getMedConfig().setQuality(10);
+            epConfig.getMedConfig().setClockRate(8000);
+            epConfig.getMedConfig().setQuality(4);
+            epConfig.getMedConfig().setEcOptions(1);
+            epConfig.getMedConfig().setEcTailLen(200);
             epConfig.getMedConfig().setThreadCnt(2);
-            epConfig.getMedConfig().setNoVad(true);
             mEndpoint.libInit(epConfig);
 
             mTrash.add(epConfig);
 
+            // Configure transports
             {
                 TransportConfig transportConfig = new TransportConfig();
                 transportConfig.setQosType(pj_qos_type.PJ_QOS_TYPE_VOICE);
@@ -237,7 +241,6 @@ public class PjSipService extends Service {
         }
     }
 
-
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
         if (!mInitialized) {
@@ -259,7 +262,6 @@ public class PjSipService extends Service {
             mWifiLock.setReferenceCounted(false);
             mTelephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             mGSMIdle = mTelephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE;
-
             IntentFilter phoneStateFilter = new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
             Log.d(TAG, "Registering PhoneStateChangedReceiver");
             registerReceiver(mPhoneStateChangedReceiver, phoneStateFilter);
@@ -816,23 +818,14 @@ public class PjSipService extends Service {
     private void handleCallDecline(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
-
             PjSipCall call = findCall(callId);
-
             CallOpParam prm = new CallOpParam();
-
-            prm.setStatusCode(pjsip_status_code.PJSIP_SC_REQUEST_TERMINATED);
-
+            prm.setStatusCode(pjsip_status_code.PJSIP_SC_REQUEST_TERMINATED );
             call.hangup(prm);
-
             mRingtone.stop();
-
-            prm.delete();
-
             mVibrator.cancel();
-
+            ringBack(false);
             mEmitter.fireIntentHandled(intent);
-
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
@@ -841,15 +834,14 @@ public class PjSipService extends Service {
     private void handleCallAnswer(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
-
             PjSipCall call = findCall(callId);
             CallOpParam prm = new CallOpParam();
             prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
             call.answer(prm);
-
             doPauseParallelCalls(call);
             mRingtone.stop();
             mVibrator.cancel();
+            ringBack(false);
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -859,10 +851,8 @@ public class PjSipService extends Service {
     private void handleCallSetOnHold(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
-
             PjSipCall call = findCall(callId);
             call.hold();
-
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -872,12 +862,9 @@ public class PjSipService extends Service {
     private void handleCallReleaseFromHold(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
-
             PjSipCall call = findCall(callId);
             call.unhold();
-
             doPauseParallelCalls(call);
-
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -887,10 +874,8 @@ public class PjSipService extends Service {
     private void handleCallMute(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
-
             PjSipCall call = findCall(callId);
             call.mute();
-
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -900,10 +885,8 @@ public class PjSipService extends Service {
     private void handleCallUnMute(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
-
             PjSipCall call = findCall(callId);
             call.unmute();
-
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
@@ -942,21 +925,14 @@ public class PjSipService extends Service {
 
     private void handleCallXFer(Intent intent) {
         try {
-
             int callId = intent.getIntExtra("call_id", -1);
-
             String destination = intent.getStringExtra("destination");
-
             PjSipCall call = findCall(callId);
-
             call.xfer(destination, new CallOpParam(true));
 
             mEmitter.fireIntentHandled(intent);
-
         } catch (Exception e) {
-
             mEmitter.fireIntentHandled(intent, e);
-
         }
     }
     
@@ -991,19 +967,12 @@ public class PjSipService extends Service {
 
     private void handleCallXFerReplaces(Intent intent) {
         try {
-
             int callId = intent.getIntExtra("call_id", -1);
-
             int destinationCallId = intent.getIntExtra("dest_call_id", -1);
-
             PjSipCall call = findCall(callId);
-
             PjSipCall destinationCall = findCall(destinationCallId);
-
             call.xferReplaces(destinationCall, new CallOpParam(true));
-
             mEmitter.fireIntentHandled(intent);
-
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
@@ -1011,17 +980,11 @@ public class PjSipService extends Service {
 
     private void handleCallRedirect(Intent intent) {
         try {
-
             int callId = intent.getIntExtra("call_id", -1);
-
             String destination = intent.getStringExtra("destination");
-
             PjSipCall call = findCall(callId);
-
             call.redirect(destination);
-
             mEmitter.fireIntentHandled(intent);
-
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
         }
@@ -1029,74 +992,19 @@ public class PjSipService extends Service {
 
     private void handleCallDtmf(Intent intent) {
         try {
-
             int callId = intent.getIntExtra("call_id", -1);
-
             String digits = intent.getStringExtra("digits");
-
-
             PjSipCall call = findCall(callId);
-
             call.dialDtmf(digits);
-
-            mEmitter.fireIntentHandled(intent);
-
-        } catch (Exception e) {
-            mEmitter.fireIntentHandled(intent, e);
-        }
-    }
-
-    private void handleCallConference(Intent intent) {
-        try {
-
-            List<AudioMedia> mCallsAudioMedia = new ArrayList<>();
-
-            for (PjSipCall currCall : mCalls)
-            {
-                for (int i = 0; i < currCall.getInfo().getMedia().size(); i++) {
-                    currCall.unhold();
-                    Media media = currCall.getMedia(i);
-                    CallMediaInfo mediaInfo = currCall.getInfo().getMedia().get(i);
-                    if (mediaInfo.getType() == pjmedia_type.PJMEDIA_TYPE_AUDIO && media != null) {
-                        AudioMedia audioMedia = AudioMedia.typecastFromMedia(media);
-                        mCallsAudioMedia.add(audioMedia);
-
-                    }
-                }
-            }
-
-            for (int i = 0; i < mCallsAudioMedia.size(); i++) {
-                for (int j = 0; j < mCallsAudioMedia.size(); j++) {
-                    if( i != j) {
-                        mCallsAudioMedia.get(i).startTransmit(mCallsAudioMedia.get(j));
-                    }
-                }
-            }
-
             mEmitter.fireIntentHandled(intent);
         } catch (Exception e) {
             mEmitter.fireIntentHandled(intent, e);
-        }
-    }
-
-    private void handleCallUnconference(Intent intent) {
-        try {
-            doPauseAllCalls();
-
-            mEmitter.fireIntentHandled(intent);
-
-        } catch (Exception e) {
-
-            mEmitter.fireIntentHandled(intent, e);
-
         }
     }
 
     private void handleChangeCodecSettings(Intent intent) {
         try {
-
             Bundle codecSettings = intent.getExtras();
-
             if (codecSettings != null) {
                 for (String key : codecSettings.keySet()) {
 
@@ -1250,10 +1158,12 @@ public class PjSipService extends Service {
 
         mCalls.add(call);
         mEmitter.fireCallReceivedEvent(call);
-}
+    }
 
     void emmitCallStateChanged(PjSipCall call, OnCallStateParam prm) {
         try {
+            Log.w(TAG, "Call state updated: " + call.getInfo().getState());
+
             if (call.getInfo().getState() == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
                 emmitCallTerminated(call, prm);
             } else {
@@ -1264,6 +1174,7 @@ public class PjSipService extends Service {
         }
     }
 
+
     void emmitCallChanged(PjSipCall call, OnCallStateParam prm) {
         try {
             final int callId = call.getId();
@@ -1272,44 +1183,38 @@ public class PjSipService extends Service {
             job(new Runnable() {
                 @Override
                 public void run() {
-
-                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED || callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
-                        mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                    }
-
+                    // Acquire wake lock
                     if (mIncallWakeLock == null) {
-                        mIncallWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "incall");
+                        mIncallWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pjsip:incall");
                     }
-
                     if (!mIncallWakeLock.isHeld()) {
                         mIncallWakeLock.acquire();
-
-                    }
-
-                    if( callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
-
-                        if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING ) {
-                            //ringBack(true);
-                        }
-
-                        if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
-                            ringBack(false);
-                        }
-
-                    }
-
-                    if( isRinging && callState != pjsip_inv_state.PJSIP_INV_STATE_NULL && callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
-                        Log.w(TAG, "Ringing stopped due to state: " + callState);
-                        ring(false);
-
                     }
 
                     if (callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING && !mUseSpeaker && mAudioManager.isSpeakerphoneOn()) {
                         mAudioManager.setSpeakerphoneOn(false);
                     }
 
+                    if( callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
+                        if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING  ) {
+                            ringBack(true);
+                        }
+
+                        if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
+                            ringBack(false);
+                        }
+                    }
+
+                    if( isRinging && callState != pjsip_inv_state.PJSIP_INV_STATE_NULL && callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
+                        Log.w(TAG, "Ringing stopped due to state: " + callState);
+                        ring(false);
+                    }
+
                     mWifiLock.acquire();
 
+                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
+                        mAudioManager.setMode(AudioManager.MODE_IN_CALL);
+                    }
                 }
             });
         } catch (Exception e) {
@@ -1319,11 +1224,58 @@ public class PjSipService extends Service {
         mEmitter.fireCallChanged(call);
     }
 
+    private void handleCallConference(Intent intent) {
+        try {
+
+            List<AudioMedia> mCallsAudioMedia = new ArrayList<>();
+
+            for (PjSipCall currCall : mCalls)
+            {
+                for (int i = 0; i < currCall.getInfo().getMedia().size(); i++) {
+                    currCall.unhold();
+                    Media media = currCall.getMedia(i);
+                    CallMediaInfo mediaInfo = currCall.getInfo().getMedia().get(i);
+                    if (mediaInfo.getType() == pjmedia_type.PJMEDIA_TYPE_AUDIO && media != null) {
+                        AudioMedia audioMedia = AudioMedia.typecastFromMedia(media);
+                        mCallsAudioMedia.add(audioMedia);
+
+                    }
+                }
+            }
+
+            for (int i = 0; i < mCallsAudioMedia.size(); i++) {
+                for (int j = 0; j < mCallsAudioMedia.size(); j++) {
+                    if( i != j) {
+                        mCallsAudioMedia.get(i).startTransmit(mCallsAudioMedia.get(j));
+                    }
+                }
+            }
+
+            mEmitter.fireIntentHandled(intent);
+        } catch (Exception e) {
+            mEmitter.fireIntentHandled(intent, e);
+        }
+    }
+
+    private void handleCallUnconference(Intent intent) {
+        try {
+            doPauseAllCalls();
+
+            mEmitter.fireIntentHandled(intent);
+
+        } catch (Exception e) {
+
+            mEmitter.fireIntentHandled(intent, e);
+
+        }
+    }
+
     void emmitCallTerminated(PjSipCall call, OnCallStateParam prm) {
         final int callId = call.getId();
         job(new Runnable() {
             @Override
             public void run() {
+
                 if (mCalls.size() == 1) {
 
                     mWifiLock.release();
@@ -1334,17 +1286,16 @@ public class PjSipService extends Service {
 
                     mAudioManager.setSpeakerphoneOn(false);
 
-                    ring(false);
+                    if( ringbackPlayer.isPlaying()) {
+                        ringBack(false);
+                    }
 
-                    ringBack(false);
+                    if (isRinging){
+                        ring(false);
+                    }
 
                     mAudioManager.abandonAudioFocus(null);
-
                     mAudioManager.setMode(AudioManager.MODE_NORMAL);
-
-                    mRingtone.stop();
-
-                    mVibrator.cancel();
                 }
             }
         });
