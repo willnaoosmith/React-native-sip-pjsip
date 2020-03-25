@@ -1177,6 +1177,7 @@ public class PjSipService extends Service {
         try {
             final int callId = call.getId();
             final pjsip_inv_state callState = call.getInfo().getState();
+            final boolean remoteOfferer = call.getInfo().getRemOfferer();
 
             job(new Runnable() {
                 @Override
@@ -1192,14 +1193,12 @@ public class PjSipService extends Service {
                         mAudioManager.setSpeakerphoneOn(false);
                     }
 
-                    if( callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY ) {
-                        if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING  ) {
-                            //ringBack(true);
-                        }
+                    if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY && !remoteOfferer) {
+                        ringBack(true);
+                    }
 
-                        if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING) {
-                            ringBack(false);
-                        }
+                    if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING && callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
+                        ringBack(false);
                     }
 
                     if( isRinging && callState != pjsip_inv_state.PJSIP_INV_STATE_NULL && callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
