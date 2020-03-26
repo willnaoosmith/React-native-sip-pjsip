@@ -1194,7 +1194,7 @@ public class PjSipService extends Service {
                     }
 
                     if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY && !remoteOfferer) {
-                        ringBack(true);
+                        //ringBack(true);
                     }
 
                     if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING && callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
