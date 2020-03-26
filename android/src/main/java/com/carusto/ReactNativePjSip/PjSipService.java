@@ -76,6 +76,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import android.telecom.TelecomManager;
 
 public class PjSipService extends Service {
 
@@ -119,7 +120,6 @@ public class PjSipService extends Service {
     }
 
     private void load() {
-        // Load native libraries
         try {
             System.loadLibrary("openh264");
         } catch (UnsatisfiedLinkError error) {
@@ -166,13 +166,11 @@ public class PjSipService extends Service {
             Log.e(TAG, "Error while loading RingBack tone", e);
         }
 
-        // Start stack
         try {
             mEndpoint = new Endpoint();
             mEndpoint.libCreate();
             mEndpoint.libRegisterThread(Thread.currentThread().getName());
 
-            // Register main thread
             Handler uiHandler = new Handler(Looper.getMainLooper());
             Runnable runnable = new Runnable() {
                 @Override
@@ -186,7 +184,6 @@ public class PjSipService extends Service {
             };
             uiHandler.post(runnable);
 
-            // Configure endpoint
             EpConfig epConfig = new EpConfig();
 
             epConfig.getLogConfig().setLevel(10);
@@ -261,6 +258,7 @@ public class PjSipService extends Service {
             IntentFilter phoneStateFilter = new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
             Log.d(TAG, "Registering PhoneStateChangedReceiver");
             registerReceiver(mPhoneStateChangedReceiver, phoneStateFilter);
+            TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
 
             mInitialized = true;
 
@@ -1178,6 +1176,7 @@ public class PjSipService extends Service {
             final int callId = call.getId();
             final pjsip_inv_state callState = call.getInfo().getState();
             final boolean remoteOfferer = call.getInfo().getRemOfferer();
+            final TelecomManager telecomManager = (TelecomManager) getApplicationContext().getSystemService(Context.TELECOM_SERVICE);
 
             job(new Runnable() {
                 @Override
@@ -1191,7 +1190,14 @@ public class PjSipService extends Service {
 
                     if (callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING && !mUseSpeaker && mAudioManager.isSpeakerphoneOn()) {
                         mAudioManager.setSpeakerphoneOn(false);
+                    }  
+
+                    try {
+                        Log.d(TAG, "porra " + telecomManager.isInCall());
+                    } catch (Exception e){
+                        Log.w(TAG, "porra error" + e);
                     }
+                    
 
                     if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY && !remoteOfferer) {
                         //ringBack(true);
@@ -1208,9 +1214,9 @@ public class PjSipService extends Service {
 
                     mWifiLock.acquire();
 
-                    if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
+                    //if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
                         //mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                    }
+                    //}
                 }
             });
         } catch (Exception e) {
