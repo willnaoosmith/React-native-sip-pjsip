@@ -104,6 +104,7 @@ public class PjSipService extends Service {
     private WifiManager mWifiManager;
     private WifiManager.WifiLock mWifiLock;
     private boolean mGSMIdle;
+    private int mIsRinging;
     private BroadcastReceiver mPhoneStateChangedReceiver = new PhoneStateChangedReceiver();
 
     public PjSipBroadcastEmiter getEmitter() {
@@ -255,6 +256,7 @@ public class PjSipService extends Service {
             mWifiLock.setReferenceCounted(false);
             mTelephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             mGSMIdle = mTelephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE;
+            mIsRinging = mTelephonyManager.getCallState();
             IntentFilter phoneStateFilter = new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
             Log.d(TAG, "Registering PhoneStateChangedReceiver");
             registerReceiver(mPhoneStateChangedReceiver, phoneStateFilter);
@@ -1175,6 +1177,7 @@ public class PjSipService extends Service {
         try {
             final int callId = call.getId();
             final pjsip_inv_state callState = call.getInfo().getState();
+            final pjsip_status_code callLastStatusCode = call.getInfo().getLastStatusCode();
             final boolean remoteOfferer = call.getInfo().getRemOfferer();
             final TelecomManager telecomManager = (TelecomManager) getApplicationContext().getSystemService(Context.TELECOM_SERVICE);
 
@@ -1192,15 +1195,10 @@ public class PjSipService extends Service {
                         mAudioManager.setSpeakerphoneOn(false);
                     }  
 
-                    try {
-                        Log.d(TAG, "porra " + telecomManager.isInCall());
-                    } catch (Exception e){
-                        Log.w(TAG, "porra error" + e);
-                    }
-                    
-
-                    if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY && !remoteOfferer) {
-                        //ringBack(true);
+                    if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY && callLastStatusCode != pjsip_status_code.PJSIP_SC_PROGRESS && !remoteOfferer){
+                        ringBack(true);
+                    } else {
+                        ringBack(false);
                     }
 
                     if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING && callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
@@ -1219,6 +1217,7 @@ public class PjSipService extends Service {
                     //}
                 }
             });
+
         } catch (Exception e) {
             Log.w(TAG, "Failed to retrieve call state", e);
         }
