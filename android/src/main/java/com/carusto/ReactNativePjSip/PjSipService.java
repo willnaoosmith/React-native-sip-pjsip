@@ -1177,13 +1177,28 @@ public class PjSipService extends Service {
         try {
             final int callId = call.getId();
             final pjsip_inv_state callState = call.getInfo().getState();
-            final pjsip_status_code callLastStatusCode = call.getInfo().getLastStatusCode();
             final boolean remoteOfferer = call.getInfo().getRemOfferer();
             final TelecomManager telecomManager = (TelecomManager) getApplicationContext().getSystemService(Context.TELECOM_SERVICE);
+            final boolean callLastStatusCode;
+            boolean let;
+
+            try {
+                Log.d(TAG, "porra: status " + call.getInfo().getLastStatusCode());
+                if (call.getInfo().getLastStatusCode() != pjsip_status_code.PJSIP_SC_PROGRESS){
+                    let = true;
+                } else {
+                    let = false;
+                }
+            } catch (Exception e) {
+                let = true;
+            }
+
+            callLastStatusCode = let;
 
             job(new Runnable() {
                 @Override
                 public void run() {
+
                     if (mIncallWakeLock == null) {
                         mIncallWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pjsip:incall");
                     }
@@ -1195,15 +1210,20 @@ public class PjSipService extends Service {
                         mAudioManager.setSpeakerphoneOn(false);
                     }  
 
-                    if( !ringbackPlayer.isPlaying() && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY && callLastStatusCode != pjsip_status_code.PJSIP_SC_PROGRESS && !remoteOfferer){
-                        ringBack(true);
-                    } else {
-                        ringBack(false);
-                    }
 
-                    if( ringbackPlayer.isPlaying() && callState != pjsip_inv_state.PJSIP_INV_STATE_CALLING && callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
-                        ringBack(false);
-                    }
+                    if (callLastStatusCode && !remoteOfferer && callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CALLING){
+                        
+                        if(!ringbackPlayer.isPlaying()) {
+                            ringBack(true);
+                        }
+
+                    } else {
+
+                        if(ringbackPlayer.isPlaying()) {
+                            ringBack(false);
+                        }
+                        
+                    }          
 
                     if( isRinging && callState != pjsip_inv_state.PJSIP_INV_STATE_NULL && callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
                         Log.w(TAG, "Ringing stopped due to state: " + callState);
@@ -1211,10 +1231,6 @@ public class PjSipService extends Service {
                     }
 
                     mWifiLock.acquire();
-
-                    //if (callState == pjsip_inv_state.PJSIP_INV_STATE_EARLY || callState == pjsip_inv_state.PJSIP_INV_STATE_CONFIRMED) {
-                        //mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                    //}
                 }
             });
 
