@@ -136,6 +136,7 @@ public class PjSipService extends Service {
         }
 
         try {
+            //Uri ringtoneUri = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ring");
             Uri ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
             mRingtone = RingtoneManager.getRingtone(getApplicationContext(), ringtoneUri);
             mVibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
@@ -147,9 +148,9 @@ public class PjSipService extends Service {
         try {
             Log.d(TAG, "pack: " + getPackageName());
             ringbackPlayer = new MediaPlayer();
-            Uri uir = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback");
-            Log.d(TAG, "Ringback uri: " + uir.toString());
-            ringbackPlayer.setDataSource(getApplicationContext(), uir);
+            Uri ringbackUri = Uri.parse("android.resource://" + getPackageName() + "/raw/" + "ringback");
+            Log.d(TAG, "Ringback uri: " + ringbackUri.toString());
+            ringbackPlayer.setDataSource(getApplicationContext(), ringbackUri);
             ringbackPlayer.setLooping(true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 AudioAttributes attrs = new AudioAttributes.Builder()
@@ -1222,7 +1223,7 @@ public class PjSipService extends Service {
                         if(ringbackPlayer.isPlaying()) {
                             ringBack(false);
                         }
-                        
+
                     }          
 
                     if( isRinging && callState != pjsip_inv_state.PJSIP_INV_STATE_NULL && callState != pjsip_inv_state.PJSIP_INV_STATE_INCOMING  &&  callState != pjsip_inv_state.PJSIP_INV_STATE_EARLY) {
