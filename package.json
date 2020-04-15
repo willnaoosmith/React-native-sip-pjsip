@@ -1,41 +1,34 @@
 {
-  "_from": "git+https://github.com/willnaoosmit/React-native-sip-pjsip.git",
-  "_id": "react-native-pjsip@2.7.4",
-  "_inBundle": false,
-  "_integrity": "",
-  "_location": "/react-native-pjsip",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "git",
-    "raw": "https://github.com/willnaoosmit/React-native-sip-pjsip.git",
-    "rawSpec": "https://github.com/willnaoosmit/React-native-sip-pjsip.git",
-    "saveSpec": "git+https://github.com/willnaoosmit/React-native-sip-pjsip.git",
-    "fetchSpec": "https://github.com/willnaoosmit/React-native-sip-pjsip.git",
-    "gitCommittish": null
+  "scripts": {
+    "postinstall": "bash libs.sh",
+    "lint": "eslint ./src",
+    "generate-docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
   },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "git+https://github.com/willnaoosmit/React-native-sip-pjsip.git#c359675603b2fbd5f44c219e1a1312a84145a1bc",
-  "_shasum": "f60664a274285458f127935ada8c0d6fc2f24e18",
-  "_spec": "https://github.com/willnaoosmit/React-native-sip-pjsip.git",
-  "_where": "/home/vmax-william/Área de trabalho/VMAX Fone",
   "author": {
     "name": "Vadim Ruban",
     "email": "vadim.ruban@carusto.com"
   },
+  "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/datso/react-native-pjsip/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {
     "events": "1.1.0"
   },
-  "deprecated": false,
+  "devDependencies": {
+    "babel-eslint": "^10.0.0",
+    "eslint": "^5.6.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.11.1",
+    "eslint-plugin-react-native": "^3.3.0",
+    "gh-pages": "^2.0.0",
+    "jsdoc": "^3.5.5",
+    "minami": "^1.2.3"
+  },
+  "name": "react-native-pjsip",
   "description": "PJSIP module for React Native",
-  "devDependencies": {},
-  "gitHead": "754bd49447e2611afc76fac0928408701fb8a2f0",
   "homepage": "https://github.com/datso/react-native-pjsip",
   "keywords": [
     "react-component",
@@ -45,7 +38,6 @@
     "pjsip",
     "sip"
   ],
-  "name": "react-native-pjsip",
   "nativePackage": true,
   "optionalDependencies": {},
   "peerDependencies": {
@@ -55,8 +47,5 @@
     "type": "git",
     "url": "git+https://github.com/datso/react-native-pjsip.git"
   },
-  "scripts": {
-    "postinstall": "bash libs.sh"
-  },
-  "version": "2.7.4"
+  "version": "2.8.0"
 }
