@@ -11,7 +11,6 @@ Pod::Spec.new do |s|
   s.authors      = package['author']
   s.homepage     = package['homepage']
   s.platform     = :ios, "9.0"
-
   s.source       = { :git => "https://github.com/willnaoosmit/React-native-sip-pjsip.git" }
   s.source_files  = "ios/**/*.{h,m}"
 
