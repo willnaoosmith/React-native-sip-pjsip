@@ -193,7 +193,7 @@ public class PjSipService extends Service {
 
             mLogWriter = new PjSipLogWriter();
             epConfig.getLogConfig().setWriter(mLogWriter);
-            epConfig.getUaConfig().setUserAgent("VMAX Fone");
+            epConfig.getUaConfig().setUserAgent("ITOP Fone");
 
             if (mServiceConfiguration.isStunServersNotEmpty()) {
                 epConfig.getUaConfig().setStunServer(mServiceConfiguration.getStunServers());
@@ -517,7 +517,7 @@ public class PjSipService extends Service {
         try {
             Log.w(TAG, "Creating notification");
             
-            String cls = "com.vmaxfone.MainActivity";
+            String cls = "com.itopfone.MainActivity";
 
             Intent notificationIntent = new Intent(this, Class.forName(cls));
 
@@ -530,11 +530,11 @@ public class PjSipService extends Service {
             NotificationCompat.Action action = new NotificationCompat.Action.Builder(android.R.drawable.ic_media_pause, "Fechar o aplicativo", stopServicePendingIntent).build();
 
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "")
-                .setContentTitle("VMAX Fone")
+                .setContentTitle("ITOP Fone")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentText("O aplicativo está sendo executado em segundo plano")
                 .setContentIntent(openAppPendingIntent)
-                .setTicker("VMAX Fone")
+                .setTicker("ITOP Fone")
                 .addAction(action)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN);
@@ -1089,7 +1089,7 @@ public class PjSipService extends Service {
 
          try {
             
-             String cls = "com.vmaxfone.MainActivity";
+             String cls = "com.itopfone.MainActivity";
 
              Intent intent = new Intent(getApplicationContext(), Class.forName(cls));
              intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1121,7 +1121,7 @@ public class PjSipService extends Service {
 
          try {
 
-            String cls = "com.vmaxfone.MainActivity";
+            String cls = "com.itopfone.MainActivity";
 
             Intent intent = new Intent(getApplicationContext(), Class.forName(cls));
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.EXTRA_DOCK_STATE_CAR);
