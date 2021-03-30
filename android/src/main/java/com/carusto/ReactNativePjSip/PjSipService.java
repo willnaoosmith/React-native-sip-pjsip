@@ -395,6 +395,9 @@ public class PjSipService extends Service {
             case PjActions.ACTION_HOLD_CALL:
                 handleCallSetOnHold(intent);
                 break;
+            case PjActions.ACTION_UPDATE_RX:
+                handleUpdateRX(intent);
+                break;
             case PjActions.ACTION_UNHOLD_CALL:
                 handleCallReleaseFromHold(intent);
                 break;
@@ -858,6 +861,18 @@ public class PjSipService extends Service {
         }
     }
 
+    private void handleUpdateRX(Intent intent) {
+        try {
+            int callId = intent.getIntExtra("call_id", -1);
+            float rxLevel = intent.getFloatExtra("rxLevel", -1);
+            PjSipCall call = findCall(callId);
+            call.updateRX(rxLevel);
+            mEmitter.fireIntentHandled(intent);
+        } catch (Exception e) {
+            mEmitter.fireIntentHandled(intent, e);
+        }
+    }
+
     private void handleCallReleaseFromHold(Intent intent) {
         try {
             int callId = intent.getIntExtra("call_id", -1);
@@ -1075,9 +1090,7 @@ public class PjSipService extends Service {
 
     void emmitCallReceived(PjSipAccount account, PjSipCall call) {
 
-        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
-
-        if (!mGSMIdle) {
+        if (mTelephonyManager.getCallState() != 0) {
             try {
                 call.hangup(new CallOpParam(true));
             } catch (Exception e) {
@@ -1087,7 +1100,9 @@ public class PjSipService extends Service {
             return;
         }
 
-         try {
+        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+
+        try {
             
              String cls = "com.vmaxfone.MainActivity";
 
@@ -1184,7 +1199,6 @@ public class PjSipService extends Service {
             boolean let;
 
             try {
-                Log.d(TAG, "porra: status " + call.getInfo().getLastStatusCode());
                 if (call.getInfo().getLastStatusCode() != pjsip_status_code.PJSIP_SC_PROGRESS){
                     let = true;
                 } else {

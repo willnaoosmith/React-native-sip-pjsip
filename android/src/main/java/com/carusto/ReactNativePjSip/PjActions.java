@@ -32,6 +32,7 @@ public class PjActions {
     public static final String ACTION_DECLINE_CALL = "call_decline";
     public static final String ACTION_ANSWER_CALL = "call_answer";
     public static final String ACTION_HOLD_CALL = "call_hold";
+    public static final String ACTION_UPDATE_RX = "update_rx";
     public static final String ACTION_UNHOLD_CALL = "call_unhold";
     public static final String ACTION_MUTE_CALL = "call_mute";
     public static final String ACTION_QUIT_APP = "exit_app";
@@ -161,6 +162,16 @@ public class PjActions {
         intent.setAction(PjActions.ACTION_HOLD_CALL);
         intent.putExtra("callback_id", callbackId);
         intent.putExtra("call_id", callId);
+
+        return intent;
+    }
+
+    public static Intent createUpdateRXCallIntent(int callbackId, int callId, float rxLevel, Context context) {
+        Intent intent = new Intent(context, PjSipService.class);
+        intent.setAction(PjActions.ACTION_UPDATE_RX);
+        intent.putExtra("callback_id", callbackId);
+        intent.putExtra("call_id", callId);
+        intent.putExtra("rxLevel", rxLevel);
 
         return intent;
     }

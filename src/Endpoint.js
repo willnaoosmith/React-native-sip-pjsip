@@ -301,6 +301,18 @@ export default class Endpoint extends EventEmitter {
      * @param call {Call} Call instance
      * @returns {Promise}
      */
+    updateRXCall(call, rxLevel) {
+        return new Promise((resolve, reject) => {
+            NativeModules.PjSipModule.updateRXCall(call.getId(), rxLevel, (successful, data) => {
+                if (successful) {
+                    resolve(data);
+                } else {
+                    reject(data);
+                }
+            });
+        });
+    }
+
     holdCall(call) {
         return new Promise((resolve, reject) => {
             NativeModules.PjSipModule.holdCall(call.getId(), (successful, data) => {
